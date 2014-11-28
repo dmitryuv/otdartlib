@@ -1,0 +1,9 @@
+name: otdartlib
+version: 0.1.0
+author: Dmitry Uvarov
+description: Operational Transform library for Dart
+dependencies:
+  collection: any
+  quiver: any
+dev_dependencies:
+  unittest: any
