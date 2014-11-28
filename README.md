@@ -56,14 +56,14 @@ This code will return you a Changeset **Builder**. The document is required, bec
 b.keep(N, L);
 
 // format N chars and L lines with attributes
-var format = new OT.AttributeList().addFormatOp('bold','true').addRemoveOp('italic','true');
+var format = new AttributeList.fromMap(format: {'bold','true'}, remove: {'italic','true'});
 b.format(N, L, format);
 
 // remove all format on the text range
 b.removeAllFormat(N, L);
 
 // insert text at the current position
-var insertFormat = new OT.AttributeList().addFormatOp('bold','true');
+var insertFormat = new AttributeList.fromMap(format: {'bold','true'});
 b.insert('hello\nworld', insertFormat);
 
 // remove text range from the current position
