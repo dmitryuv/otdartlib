@@ -3,7 +3,7 @@
  */
 part of otdartlib.ottypes;
 
-class OT_atext extends OTType<ADocument, Changeset> {
+class OT_atext extends OTTypeFactory<ADocument, Changeset> {
   static final _name = 'atext';
   static final _uri = 'https://github.com/dmitryuv/atext-changeset';
   

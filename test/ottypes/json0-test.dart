@@ -4,8 +4,7 @@ void json0_test() {
   clone(obj) => JSON.decode(JSON.encode(obj));
   var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
 
-  var json0 = new OT_json0();
-  OT_json0.registerSubtype(new OT_text0());
+  var json0 = new OTTypeFactory.from('json0');
   
   group('json0', () {
     group('sanity', () {

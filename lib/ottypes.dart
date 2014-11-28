@@ -9,6 +9,7 @@ part 'src/ottypes/bootstrap_transform.dart';
 part 'src/ottypes/atext.dart';
 part 'src/ottypes/json0.dart';
 part 'src/ottypes/text0.dart';
+part 'src/ottypes/ottypefactory.dart';
 
 abstract class OTType<T, E> {
   String get name;

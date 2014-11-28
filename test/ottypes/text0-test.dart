@@ -1,7 +1,7 @@
 part of otdartlib.test.ottypes;
 
 void text0_test() {
-  var text0 = new OT_text0();
+  var text0 = new OTTypeFactory.from('text0');
   
   group('text0', () {
     group('compose', () {

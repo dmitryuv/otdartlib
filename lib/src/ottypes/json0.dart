@@ -18,7 +18,7 @@ part of otdartlib.ottypes;
  * JSON OT Type
  * @type {*}
  */
-class OT_json0 extends OTType<dynamic, List> with _BootstrapTransform {
+class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform {
   static final _name = 'json0';
   static final _uri = 'http://sharejs.org/types/JSONv0';
 
@@ -37,23 +37,15 @@ class OT_json0 extends OTType<dynamic, List> with _BootstrapTransform {
   @override
   String get uri => _uri;
   
-  
-  // You can register another OT type as a subtype in a JSON document using
-  // the following function. This allows another type to handle certain
-  // operations instead of the builtin JSON type.
-  static Map<String, OTType> _subtypes = {};
-  static void registerSubtype(OTType subtype) {
-    _subtypes[subtype.name] = subtype;
-  }
-  
+ 
   Map _invertComponent(Map mc) {
     var c = new _JsonOpComponent(mc);
     var c_ = new _JsonOpComponent({'p': c.path});
   
     // handle subtype ops
-    if (c.hasSubtype && _subtypes.containsKey(c.subtype)) {
+    if (c.hasSubtype) {
       c_.subtype = c.subtype;
-      c_.subop = _subtypes[c.subtype].invert(c.subop);
+      c_.subop = new OTTypeFactory.from(c.subtype).invert(c.subop);
     }
   
     if (c.hasOI) c_.od = c.oi;
@@ -120,8 +112,8 @@ class OT_json0 extends OTType<dynamic, List> with _BootstrapTransform {
       });
 
       // handle subtype ops
-      if (c.hasSubtype && _subtypes.containsKey(c.subtype)) {
-        elem[key] = _subtypes[c.subtype].apply(elem[key], c.subop);
+      if (c.hasSubtype) {
+        elem[key] = new OTTypeFactory.from(c.subtype).apply(elem[key], c.subop);
 
       // Number add
       } else if (c.hasNA) {
@@ -250,8 +242,8 @@ class OT_json0 extends OTType<dynamic, List> with _BootstrapTransform {
   
     if (pathMatches(c.path, last.path)) {
       // handle subtype ops
-      if (c.hasSubtype && last.hasSubtype && c.subtype == last.subtype && _subtypes.containsKey(c.subtype)) {
-        last.subop = _subtypes[c.subtype].compose(last.subop, c.subop);
+      if (c.hasSubtype && last.hasSubtype && c.subtype == last.subtype) {
+        last.subop = new OTTypeFactory.from(c.subtype).compose(last.subop, c.subop);
       } else if (last.hasNA && c.hasNA) {
         dest[dest.length - 1] = {'p': last.path, 'na': last.na + c.na};
       } else if (last.hasLI && !c.hasLI && c.hasLD && c.ld == last.li) {
@@ -389,8 +381,8 @@ class OT_json0 extends OTType<dynamic, List> with _BootstrapTransform {
       bool commonOperand = cplength == otherCplength;
   
       // handle subtype ops
-      if (otherC.hasSubtype && c.hasSubtype && c.subtype == otherC.subtype && _subtypes.containsKey(otherC.subtype)) {
-        var res = _subtypes[c.subtype].transform(c.subop, otherC.subop, type);
+      if (otherC.hasSubtype && c.hasSubtype && c.subtype == otherC.subtype) {
+        var res = new OTTypeFactory.from(c.subtype).transform(c.subop, otherC.subop, type);
 
         if (res.length > 0) {
           c.subop = res;
