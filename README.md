@@ -1,4 +1,4 @@
-# atext-changeset
+# OTDartLib including atext-changeset
 A library for building collaborative rich-text editors using [operational transformation](https://en.wikipedia.org/wiki/Operational_transformation). 
 
 It's based on [easysync](https://github.com/ether/etherpad-lite/tree/develop/doc/easysync) spec from the [Etherpad-Lite](https://github.com/ether/etherpad-lite) project. The format describes rich text document and any changes to it by expressing document and its rich formatting via text with attributes. The representation aims to be compact for quick transfers and effective storage.
