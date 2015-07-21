@@ -7,8 +7,8 @@ class OT_atext extends OTTypeFactory<ADocument, Changeset> {
   static final _name = 'atext';
   static final _uri = 'https://github.com/dmitryuv/atext-changeset';
   
-  ADocument create([initial]) {
-    if(initial is String && initial != null) {
+  ADocument create([String initial]) {
+    if(initial != null) {
       return new ADocument.fromText(initial);
     } else {
       return new ADocument();
@@ -40,5 +40,9 @@ class OT_atext extends OTTypeFactory<ADocument, Changeset> {
   @override
   Changeset transform(Changeset op, Changeset otherOp, String side) {
     return op.transform(otherOp, side);
+  }
+
+  Position transformPosition(Position p, Changeset otherOp, String side) {
+    return p.transform(otherOp, side);
   }
 }

@@ -147,58 +147,6 @@ class Changeset extends ComponentList {
   }
 
   /**
-   * Transform single position by this changeset. if operation is insert and side=='left', 
-   * cursor is pushed before the insert, overwise it's after the insert
-   */
-  Position transformPosition(Position pos, String side) {
-    if(side != 'left' && side != 'right') {
-      throw new Exception('side should be \'left\' or \'right\'');
-    }
-    sort();
-  
-    var res = pos.clone();
-    // iteration cursor
-    var c = new Position();
-    this.any((op) {
-      if(op.isInsert) {
-        if(c.before(res) || (c == res && side == 'right')) {
-          // insert can split current line
-          if(op.lines > 0 && res.line == c.line) {
-            res..subtract(c.ch, 0)
-              ..add(0, op.lines);
-          } else {
-            res.add(op.chars, op.lines);
-          }
-        }
-        // advance cursor
-        c.advance(op.chars, op.lines);
-      } else if(op.isRemove) {
-        var inRange = c.before(res) && res.before(c.clone()..advance(op.chars, op.lines));
-        if(c.before(res) && !inRange) {
-          // remove muiltiline range can join cursor row with position row, if they end up on the same row
-          if (op.lines > 0 && (c.line + op.lines) == res.line) {
-            res.add(c.ch, 0);
-            res.line = c.line;
-          } else {
-            res.subtract(op.chars, op.lines);
-          }
-        } else if (inRange) {
-          // we're collapsing range where current position is
-          res = c.clone();
-        }
-      } else {
-        // KEEP, just advance our position
-        c.advance(op.chars, op.lines);
-      }
-  
-      // iterator break - if we passed calculated position, we can stop iterating over ops
-      return res.before(c);
-    });
-  
-    return res;
-  }
-
-  /**
    * Compose this changeset with other changeset, producing cumulative result of both changes.
    */
   Changeset compose(Changeset otherCS) {

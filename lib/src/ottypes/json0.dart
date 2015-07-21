@@ -97,8 +97,8 @@ class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform {
       'data': snapshot
     };
 
-    op.forEach((c) {
-      c = new _JsonOpComponent(c);
+    op.forEach((c_) {
+      var c = new _JsonOpComponent(c_);
 
       var key = 'data';
       var elem = container;
