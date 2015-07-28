@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 import '../lib/ottypes.dart';
 import '../lib/atext_changeset.dart';
-import '../lib/fuzzer.dart';
+import 'lib/fuzzer.dart';
 
 part 'ottypes/impl/atext_impl.dart';
 part 'ottypes/impl/json0_impl.dart';

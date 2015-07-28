@@ -11,7 +11,7 @@ class _RandomUtils {
   static final String _testDirectory = path.dirname((reflectClass(_RandomUtils).owner as LibraryMirror).uri.path);
 
 
-  static List<String> _words = new File(_testDirectory + '/src/fuzzer/jabberwocky.txt')
+  static List<String> _words = new File(_testDirectory + '/fuzzer/jabberwocky.txt')
     .readAsStringSync()
     .split(new RegExp(r'\W+'))..removeWhere((s) => s.isEmpty);
    
