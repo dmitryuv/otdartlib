@@ -1,6 +1,6 @@
 library otdartlib.test.ottypes;
 
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'dart:convert';
 import 'dart:math';
 import '../lib/ottypes.dart';

@@ -7,4 +7,4 @@ dependencies:
   collection: any
   quiver: any
 dev_dependencies:
-  unittest: any
+  test: any

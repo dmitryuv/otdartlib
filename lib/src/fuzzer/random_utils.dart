@@ -7,8 +7,11 @@ class _RandomUtils {
   
 //  static final _random = new MersenneTwister(seed);
   static final _random = new MersenneTwister()..seed(seed);
-  
-  static List<String> _words = new File(new File(Platform.script.toFilePath()).parent.path + '/../lib/src/fuzzer/jabberwocky.txt')
+
+  static final String _testDirectory = path.dirname((reflectClass(_RandomUtils).owner as LibraryMirror).uri.path);
+
+
+  static List<String> _words = new File(_testDirectory + '/src/fuzzer/jabberwocky.txt')
     .readAsStringSync()
     .split(new RegExp(r'\W+'))..removeWhere((s) => s.isEmpty);
    
