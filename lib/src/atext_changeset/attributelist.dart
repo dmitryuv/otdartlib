@@ -37,15 +37,11 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
    * Create attributes from the map
    */
   factory AttributeList.fromMap({Map format, Map remove}) {
-    var len = (format == null ? 0 : format.length) + (remove == null ? 0 : remove.length);
+    var len = (format?.length ?? 0) + (remove?.length ?? 0);
     var list = new List<OpAttribute>(len);
     var i = 0;
-    if(remove != null) {
-      remove.forEach((k, v) => list[i++] = new OpAttribute.remove(k, v));
-    }
-    if(format != null) {
-      format.forEach((k, v) => list[i++] = new OpAttribute.format(k, v));
-    }
+    remove?.forEach((k, v) => list[i++] = new OpAttribute.remove(k, v));
+    format?.forEach((k, v) => list[i++] = new OpAttribute.format(k, v));
     return new AttributeList.from(list);
   }
   
@@ -246,7 +242,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
    */
   AttributeList invert([AttributeList exceptAtts]) {
     var res = map((a) {
-      if(exceptAtts != null && exceptAtts.contains(a)) {
+      if(exceptAtts?.contains(a) ?? false) {
         return a;
       } else {
         return a.invert();
@@ -260,7 +256,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
    * Packs attributes into new or existing pool
    */
   String pack([List optPool]) {
-    var pool = optPool == null ? [] : optPool;
+    var pool = optPool ?? [];
     var nMap = {};
     var kMap = {};
 
@@ -278,10 +274,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
   
         // another sanity check to make sure we don't have 2 authors
         // or 2 images with different values
-        int cnt = kMap[item.op.key];
-        if(cnt == null) {
-          cnt = 0;
-        }
+        int cnt = kMap[item.op.key] ?? 0;
         
         cnt = kMap[item.op.key] = cnt + (item.op.opcode == OpAttribute.FORMAT ? 1 : -1);
         if(cnt < -1 || cnt > 1) {

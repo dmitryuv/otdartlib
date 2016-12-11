@@ -19,11 +19,7 @@ class Changeset extends ComponentList {
   
   Changeset(Iterable<OpComponent> ops, this._oldLen, { String author, int newLen }) : super.from(ops) {
     _author = author;
-    _newLen = newLen;
-    
-    if(_newLen == null) {
-      _newLen = _oldLen + fold(0,  (prev, op) => prev + op.deltaLen);
-    }
+    _newLen = newLen ?? (_oldLen + fold(0,  (prev, op) => prev + op.deltaLen));
   }
 
   /**
@@ -260,9 +256,7 @@ class Changeset extends ComponentList {
    * Pack changeset into compact format that can be stored or transferred by network. 
    */
   Map pack([List pool]) {
-    if(pool == null) {
-      pool = [];
-    }
+    pool ??= [];
     var packed = super.toAString(pool);
     var op = 'X:' + _util.toString36(_oldLen)
       + (packed.dLen >= 0 ? '>' : '<') + _util.toString36(packed.dLen.abs())
@@ -277,7 +271,7 @@ class Changeset extends ComponentList {
     }
   
     var cs = { 'op': op, 'p': pool };
-    if(this._author != null) {
+    if(_author != null) {
       cs['u'] = _author;
     }
     return cs;

@@ -113,9 +113,7 @@ class ComponentList extends DirtyList<OpComponent>{
    * @returns {Object(a, s, dLen, pool)} to use by Changeset class
    */
   AString toAString([List pool]) {
-    if(pool == null) {
-      pool = [];
-    }
+    pool ??= [];
 
     var res = new AString(pool: pool);
     var buf = new AString();

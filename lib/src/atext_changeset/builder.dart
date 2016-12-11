@@ -53,7 +53,7 @@ class Builder {
   }
   
   void insert(String text, [AttributeList attribs]) {
-    attribs = attribs == null ? _authorAtts : attribs.merge(_authorAtts);
+    attribs = attribs?.merge(_authorAtts) ?? _authorAtts;
   
     var lastNewline = text.lastIndexOf('\n');
     if(lastNewline < 0) {

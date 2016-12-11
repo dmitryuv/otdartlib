@@ -20,7 +20,7 @@ class ADocument extends DelegatingList<Map> implements Clonable {
   
   ADocument._(List lines, [List pool]) : 
     super(lines), 
-    this.pool = pool == null ? [] : pool;
+    this.pool = pool ?? [];
   
   ALinesMutator mutate() => new ALinesMutator(this, pool);
 

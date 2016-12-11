@@ -66,7 +66,7 @@ class OpComponent implements Clonable {
   OpComponent clone([String newOpcode]) => copyTo(new OpComponent(null), newOpcode);
 
   OpComponent copyTo(OpComponent otherOp, [String newOpcode]) {
-    return otherOp..set(newOpcode == null ? opcode : newOpcode, chars, lines, attribs, charBank);
+    return otherOp..set(newOpcode ?? opcode, chars, lines, attribs, charBank);
   }
 
   /**
@@ -180,7 +180,7 @@ class OpComponent implements Clonable {
    * Return attributes string for the component
    */
   AString pack(List pool) {
-    if(opcode == null || this.opcode == '') {
+    if(opcode == null || opcode == '') {
       return new AString();
     }
     
