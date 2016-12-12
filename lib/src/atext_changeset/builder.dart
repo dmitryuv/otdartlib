@@ -41,12 +41,12 @@ class Builder {
     attribs = attribs.merge(_authorAtts);
 
     _mut.take(N, L).forEach((c) {
-      c = c.clone(OpComponent.KEEP);
+      c = new OpComponent.createFormat(c.chars, c.lines, c.attribs);
       if(removeAll) {
-        c..invertAttributes()
-          ..composeAttributes(attribs);
+        c = c.invertAttributes()
+              .composeAttributes(attribs);
       } else {
-        c.formatAttributes(attribs);
+        c = c.formatAttributes(attribs);
       }
       _ops.add(c);
     });

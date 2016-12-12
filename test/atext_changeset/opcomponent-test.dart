@@ -6,24 +6,13 @@ void opComponent_test() {
   group('OpComponent', () {
     test('test constructor', () {
       var pool = [['foo','bar']];
-      expect(new OpComponent('=').opcode, equals('='));
-      expect(new OpComponent(null).charBank, equals(null));
-      expect(() => new OpComponent('+', 2, 1, null, '\na'), throwsA(errMatcher('should end up with newline')));
+      expect(new OpComponent.createKeep(0, 0).opcode, equals('='));
+      expect(new OpComponent.createInsert(0, 0, new AttributeList(), '').opcode, equals('+'));
+      expect(new OpComponent.createRemove(0, 0, new AttributeList(), '').opcode, equals('-'));
+      expect(new OpComponent.empty().charBank, equals(''));
+      expect(() => new OpComponent('+', 2, 1, new AttributeList(), '\na'), throwsA(errMatcher('should end up with newline')));
     });
 
-    test('clear', () {
-      expect(new OpComponent()..clear(), equals(new OpComponent()));
-    });
-  
-    test('clone', () {
-      var pool = [['foo','bar']];
-      var orig = new OpComponent('+', 2, 1, new AttributeList.unpack('*0',pool), 'a\n');
-      expect(orig.clone(), equals(orig));
-      expect(orig.copyTo(new OpComponent()), equals(orig));
-      // clear charbank on opcode override to '='
-      expect(orig.copyTo(new OpComponent(), '='), equals(new OpComponent('=', 2, 1, new AttributeList.unpack('*0',pool), '')));
-    });
-  
     test('equal', () {
       var pool = [['foo', 'bar']];
       test(c1, c2, ignoreOpcode, res) {
@@ -42,10 +31,14 @@ void opComponent_test() {
       test(['+', 1, 0, '*0', 'a'], ['=', 1, 0, '*0', ''], true, true);
     });
   
-    test('trim', () {
-      var c = new OpComponent('+', 5, 2, null, 'ab\nc\n');
-      expect(c.clone()..trimLeft(3, 1), equals(new OpComponent('+', 2, 1, null, 'c\n')));
-      expect(c.clone()..trimRight(3, 1), equals(new OpComponent('+', 3, 1, null, 'ab\n')));
+    test('slice', () {
+      var c = new OpComponent('+', 5, 2, new AttributeList(), 'ab\nc\n');
+//      var s = c.sliceRight(3, 1);
+//      var r = new OpComponent('+', 2, 1, new AttributeList(), 'c\n');
+//      print('${c.sliceRight(3, 1).hashCode}, ${new OpComponent('+', 2, 1, new AttributeList(), 'c\n').hashCode}');
+//      print('$s, $r');
+      expect(c.sliceRight(3, 1), equals(new OpComponent('+', 2, 1, new AttributeList(), 'c\n')));
+      expect(c.sliceLeft(3, 1), equals(new OpComponent('+', 3, 1, new AttributeList(), 'ab\n')));
     });
   
     group('invert', () {
@@ -53,7 +46,7 @@ void opComponent_test() {
         test(name, () {
           atts = new AttributeList.unpack(atts, [['foo','bar']]);
           expectedAtts = new AttributeList.unpack(expectedAtts, [['foo','bar']]);
-          var c = new OpComponent(opcode, 1, 0, atts, 'a').inverted();
+          var c = new OpComponent(opcode, 1, 0, atts, 'a').invert();
           expect(c, equals(new OpComponent(expectedOpcode, 1, 0, expectedAtts, 'a')));
         });
       }
@@ -67,55 +60,39 @@ void opComponent_test() {
       var alist = new AttributeList.unpack('*0', [['foo','bar']]);
       var c = new OpComponent('+', 3, 1, alist, 'ab\n');
       test('same type', () {
-        expect(c.clone()..append(c), equals(new OpComponent('+', 6, 2, alist, 'ab\nab\n')));
+        expect(c.append(c), equals(new OpComponent('+', 6, 2, alist, 'ab\nab\n')));
       });
       test('to empty', () {
-        expect(new OpComponent()..append(c), equals(c));
+        expect(new OpComponent.empty().append(c), equals(c));
       });
       test('throw if not compatible', () {
         expect(() {
-            var c2 = c.clone()
-                ..opcode = '=';
-            c.clone()..append(c2);
+            var c2 = new OpComponent.createKeep(1, 0);
+            c.append(c2);
           }, throwsA(errMatcher('cannot append')));
         expect(() {
-            var c2 = c.clone()
-              ..attribs = new AttributeList.unpack('*0', [['x', 'y']]);
-            c.clone()..append(c2);
+            var c2 = new OpComponent(c.opcode, c.chars, c.lines, new AttributeList.unpack('*0', [['x', 'y']]), c.charBank);
+            c.append(c2);
           }, throwsA(errMatcher('cannot append')));
       });
       test('skip no-ops', () {
-        expect(c.clone()..append(new OpComponent()), equals(c));
+        expect(c.append(new OpComponent.empty()), equals(c));
       });
     });
 
-    test('takeLine', () {
-      var c = new OpComponent('+', 4, 2, null, 'a\nb\n');
-      expect(c.takeLine(), equals(new OpComponent('+', 2, 1, null, 'a\n')));
-      expect(c.takeLine(), equals(new OpComponent('+', 2, 1, null, 'b\n')));
-      expect(c, equals(new OpComponent('', 0, 0, null, '')));
+    test('slicer', () {
+      var c = new OpComponent('+', 4, 2, new AttributeList(), 'a\nb\n');
+      var slicer = c.slicer;
+      expect(slicer.nextLine(), equals(new OpComponent('+', 2, 1, new AttributeList(), 'a\n')));
+      expect(slicer.next(2, 1), equals(new OpComponent('+', 2, 1, new AttributeList(), 'b\n')));
+      expect(slicer.isEmpty, equals(true));
+      expect(slicer.current, equals(new OpComponent('+', 0, 0, new AttributeList(), '')));
     });
 
     test('pack', () {
       var pool = [['foo','bar'], ['x','y']];
       var c = new OpComponent('+', 10, 2, new AttributeList.unpack('*0*1', pool), '1234\n6789\n');
       expect(c.pack(pool), equals(new AString(atts: '*0*1|2+a', text: '1234\n6789\n')));
-    });
-
-    test('skip', () {
-      var c = new OpComponent('+', 4, 2, null, 'a\nb\n');
-      var c2 = new OpComponent();
-      c.copyTo(c2).skip();
-      expect(c2.opcode, equals(''));
-      expect(c2.isEmpty, equals(true));
-
-      c.copyTo(c2).skipIfEmpty();
-      expect(c2, equals(c));
-
-      c.copyTo(c2)
-        ..trimRight(0, 0)
-        ..skipIfEmpty();
-      expect(c2, equals(new OpComponent('', 0, 0, null, '')));
     });
   });
 }

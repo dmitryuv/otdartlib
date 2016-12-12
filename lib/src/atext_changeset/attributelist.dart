@@ -8,8 +8,8 @@ part of otdartlib.atext_changeset;
 class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonable {
   static final _attRegex = new RegExp(r'([\*\^])([0-9a-z]+)');
   
-  AttributeList() : super(new List<OpAttribute>(0));
-  
+  AttributeList() : super(const []);
+
   /**
    * Create a new attribute list from a list of attributes =], does not create a local copy
    */

@@ -21,7 +21,7 @@ void alinesMutator_test() {
   
     test('length calculation when mutate in progress', () {
       var m = new ALinesMutator(clone(sample), pool)
-        ..insert(new OpComponent('+', 1, 0, null, 'a'));
+        ..insert(new OpComponent('+', 1, 0, new AttributeList(), 'a'));
 
       expect(m.getLength(), equals(10));
     });
@@ -51,7 +51,7 @@ void alinesMutator_test() {
     test('can insert multiline ops mid-line', () {
       var m = new ALinesMutator(clone(sample), pool)
         ..skip(2, 0)
-        ..insert(new OpComponent('+', 4, 2, null, 'X\nY\n'));
+        ..insert(new OpComponent('+', 4, 2, new AttributeList(), 'X\nY\n'));
       var res = m.finish();
   
       expect(res, equals([{'a':'*0+1|1+3', 's':'abX\n'}, {'a':'|1+2', 's':'Y\n'}, {'a':'|1+2', 's':'c\n'}, {'a':'*1+4|1+1', 's':'defg\n'}]));
@@ -102,7 +102,7 @@ void alinesMutator_test() {
       var m = new ALinesMutator(lines, [])
         ..skip(2, 1)
         ..remove(1, 0)
-        ..insert(new OpComponent('+', 2, 1, null, 'X\n'));
+        ..insert(new OpComponent('+', 2, 1, new AttributeList(), 'X\n'));
       
       expect(m.finish(), equals([{"a":"|1+2","s":"a\n"},{"a":"|1+2","s":"X\n"}]));
     });
@@ -112,7 +112,7 @@ void alinesMutator_test() {
       var m = new ALinesMutator(lines, [])
         ..skip(1, 0)
         ..remove(3, 2)
-        ..insert(new OpComponent('+', 1, 0, null, 'X'));
+        ..insert(new OpComponent('+', 1, 0, new AttributeList(), 'X'));
       
       expect(m.finish(), equals([{"a":"+2","s":"aX"}]));
     });
@@ -131,17 +131,17 @@ void alinesMutator_test() {
       expect(m.remove(2, 0), equals(clist([['+', 2, 0, null, 'ab']])));
       
       m..skip(3, 1)
-        ..insert(new OpComponent('+', 4, 2, null, 'X\nY\n'))
+        ..insert(new OpComponent('+', 4, 2, new AttributeList(), 'X\nY\n'))
         ..skip(2, 0);
       expect(m.remove(2, m.remaining), equals(clist([['+', 2, 1, null, 'g\n']])));
       
-      m.insert(new OpComponent('+', 1, 1, null, '\n'));
+      m.insert(new OpComponent('+', 1, 1, new AttributeList(), '\n'));
       expect(m.finish(), equals([{'a':'|1+3', 's':'cd\n'},{'a':'|1+2', 's':'X\n'}, {'a':'|1+2', 's':'Y\n'}, {'a':'|1+3', 's':'ef\n'}]));
     });
   
     test('multiline format', () {
       var localSample = [{'a':'|1+5', 's':'abcd\n'}, {'a':'|1+4', 's':'efg\n'}];
-      var fop = new OpComponent('=', 8, 2, new AttributeList.unpack('*0', pool));
+      var fop = new OpComponent.createFormat(8, 2, new AttributeList.unpack('*0', pool));
       var m = new ALinesMutator(clone(localSample), pool)
         ..skip(1, 0)
         ..applyFormat(fop);

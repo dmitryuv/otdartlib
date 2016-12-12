@@ -44,13 +44,13 @@ class ComponentList extends DirtyList<OpComponent>{
   @override
   BackBufferIterator<OpComponent> get iterator => new BackBufferIterator._internal(super.iterator);
 
-  void addKeep(int N, int L) => add(new OpComponent(OpComponent.KEEP, N, L));
+  void addKeep(int N, int L) => add(new OpComponent.createKeep(N, L));
 
-  void addInsert(int N, int L, AttributeList alist, String charBank) => add(new OpComponent(OpComponent.INSERT, N, L, alist, charBank));
+  void addInsert(int N, int L, AttributeList alist, String charBank) => add(new OpComponent.createInsert(N, L, alist, charBank));
 
-  void addRemove(int N, int L, AttributeList alist, String charBank) => add(new OpComponent(OpComponent.INSERT, N, L, alist, charBank));
+  void addRemove(int N, int L, AttributeList alist, String charBank) => add(new OpComponent.createRemove(N, L, alist, charBank));
 
-  Iterable<OpComponent> get inverted => map((op) => op.inverted());
+  Iterable<OpComponent> get inverted => map((op) => op.invert());
   
   /**
    * Reorders components to keep removals before insertions. Makes sense
@@ -117,8 +117,8 @@ class ComponentList extends DirtyList<OpComponent>{
 
     var res = new AString(pool: pool);
     var buf = new AString();
-    var last = new OpComponent();
-    var inner = new OpComponent();
+    var last = new OpComponent.empty();
+    var inner = new OpComponent.empty();
 
     push(AString res, AString packed, [clear = false]) {
       res.atts += packed.atts;
@@ -137,10 +137,10 @@ class ComponentList extends DirtyList<OpComponent>{
           // final keep, drop
         } else {
           push(res, last.pack(pool));
-          last.clear();
+          last = new OpComponent.empty();
           if(inner.isNotEmpty) {
             push(res, inner.pack(pool));
-            inner.clear();
+            inner = new OpComponent.empty();
           }
         }
       }
@@ -150,18 +150,17 @@ class ComponentList extends DirtyList<OpComponent>{
       if(last.opcode == op.opcode && last.attribs == op.attribs) {
         if(op.lines > 0) {
           // last and inner are all mergable into multi-line op
-          last..append(inner)
-            ..append(op);
-          inner.clear();
+          last = last.append(inner).append(op);
+          inner = new OpComponent.empty();
         } else if (last.lines == 0) {
           // last and op are both in-line
-          last.append(op);
+          last = last.append(op);
         } else {
-          inner.append(op);
+          inner = inner.append(op);
         }
       } else {
         flush();
-        op.copyTo(last);
+        last = op;
       }
     }
 

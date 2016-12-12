@@ -31,7 +31,7 @@ void astringMutator_test() {
   
     test('return injected component', () {
       var m = new AStringMutator(sample.clone(), pool);
-      m.inject(new OpComponent(OpComponent.INSERT, 2, 0, null, 'XX'));
+      m.inject(new OpComponent(OpComponent.INSERT, 2, 0, new AttributeList(), 'XX'));
       expect(m.take(3), equals(clist([['+',2,0,null,'XX'],['+',1,0,'*0','a']])));
     });
   
@@ -75,7 +75,7 @@ void astringMutator_test() {
   
     test('accept single newline only at the end of the string', () {
       var m = new AStringMutator(new AString(atts:'+2', text:'ab'), pool);
-      var op = new OpComponent('+', 2, 1, null, 'X\n');
+      var op = new OpComponent('+', 2, 1, new AttributeList(), 'X\n');
   
       expect(() {
         m.insert(op);
@@ -84,7 +84,7 @@ void astringMutator_test() {
       m.skip(m.remaining);
   
       expect(() {
-        m.insert(new OpComponent('+', 4, 2, null, 'a\nb\n'));
+        m.insert(new OpComponent('+', 4, 2, new AttributeList(), 'a\nb\n'));
       }, throwsA(errMatcher('end of the string')));
   
       m.insert(op);
@@ -96,7 +96,7 @@ void astringMutator_test() {
     });
   
     test('format string', () {
-      var fop = new OpComponent('=', 4, 0, new AttributeList.unpack('*4', pool));
+      var fop = new OpComponent.createFormat(4, 0, new AttributeList.unpack('*4', pool));
       var m = new AStringMutator(sample.clone(), pool)
         ..skip(3)
         ..applyFormat(fop);
@@ -130,7 +130,7 @@ void astringMutator_test() {
   
       expect(() {
         new AStringMutator(sample.clone(), pool)
-          ..insert(new OpComponent('-'));
+          ..insert(new OpComponent('-', 0, 0, new AttributeList(), ''));
       }, throwsA(errMatcher('bad opcode')));
   
       expect(() {

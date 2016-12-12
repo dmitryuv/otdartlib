@@ -10,7 +10,7 @@ class AStringMutator {
   final List _pool;
   BackBufferIterator<OpComponent> _iter;
   ComponentList _iteratedOps = new ComponentList();
-  OpComponent _current = new OpComponent();
+  OpComponent _current = null;
   bool _mutated = false;
   bool _iterFoundNewline = false;
   bool _hasNewline;
@@ -38,10 +38,10 @@ class AStringMutator {
         if(!_iter.moveNext()) {
           throw new Exception('unexpected end of astring');
         }
-        _iter.current.copyTo(_current);
+        _current = _iter.current;
 
         if(!_current.isInsert || (_current.lines == 1 && _iterFoundNewline) || _current.lines > 1) {
-          throw new Exception('cannot iterate over non-astring');
+          throw new Exception('cannot iterate over non-astring (should contain only inserts)');
         }
         if(_current.lines == 1) {
           _iterFoundNewline = true;
@@ -50,13 +50,13 @@ class AStringMutator {
 
       if(_current.chars <= N) {
         // take all and continue
-        ops.add(_current.clone());
+        ops.add(_current);
         N -= _current.chars;
-        _current.skip();
+        _current = null;
       } else {
         // take part
-        ops.add(_current.clone()..trimRight(N, 0));
-        _current.trimLeft(N, 0);
+        ops.add(_current.sliceLeft(N, 0));
+        _current = _current.sliceRight(N, 0);
         N = 0;
       }
     }
@@ -91,7 +91,7 @@ class AStringMutator {
     var ops = _take(N);
     _n += N;
     // save a copy to internal collection in case of string mutation
-    _iteratedOps.addAll(ops.map((c) => c.clone()));
+    _iteratedOps.addAll(ops);
     return ops;
   }
 
@@ -118,7 +118,7 @@ class AStringMutator {
   void insert(OpComponent opc) {
     _validateInsert(opc);
     _mutated = true;
-    _iteratedOps.add(opc.clone());
+    _iteratedOps.add(opc);
     _len += opc.chars;
     _n += opc.chars;
   }
@@ -128,7 +128,7 @@ class AStringMutator {
    */
   void inject(OpComponent opc) {
     _validateInsert(opc);
-    _iter.pushBack(opc.clone());
+    _iter.pushBack(opc);
     _mutated = true;
     _len += opc.chars;
   }
@@ -144,7 +144,7 @@ class AStringMutator {
   
     // here we must apply format to all components
     _iteratedOps.addAll(
-      _take(opc.chars).map((c) => c..composeAttributes(opc.attribs))
+      _take(opc.chars).map((c) => c.composeAttributes(opc.attribs))
       );
     _n += opc.chars;
     _mutated = true;

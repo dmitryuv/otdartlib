@@ -163,7 +163,8 @@ class ALinesMutator {
     var newLines = [];
   
     if(opc.lines > 0) {
-      opc = opc.clone();
+      var slicer = opc.slicer;
+
       var linesToAdd = opc.lines;
       if(curLine.position != 0 || curLine.isMutated) {
         // append to the current line and move tail to the new line
@@ -172,12 +173,12 @@ class ALinesMutator {
         // producing extra line to replace
         removeLines = 1;
 
-        curLine.insert(opc.takeLine());
+        curLine.insert(slicer.nextLine());
         newLines.add(curLine.finish().pack());
       }
 
-      while(opc.isNotEmpty) {
-        var c = new ComponentList()..add(opc.takeLine());
+      while(slicer.isNotEmpty) {
+        var c = new ComponentList()..add(slicer.nextLine());
         newLines.add(c.pack(_pool));
       }
       if(extraLine != null && extraLine.isNotEmpty) {
@@ -196,18 +197,17 @@ class ALinesMutator {
   
   void applyFormat(OpComponent opc) {
     if(opc.lines > 0) {
-      opc = opc.clone();
+      var slicer = opc.slicer;
       // format line by line
-      while(opc.isNotEmpty) {
+      while(slicer.isNotEmpty) {
         var line = _getCurLine();
         var len = line.remaining;
-        var fop = opc.clone()..trimRight(len, 1);
-  
+        var fop = slicer.next(len, 1);
+
         line.applyFormat(fop);
-        opc..trimLeft(len, 1)..skipIfEmpty();
         _nextLine();
       }
-      if(opc.chars != 0 || opc.lines != 0) {
+      if(slicer.current.lines != 0) {
         throw new Exception('chars in format operation does not match actual chars in the document');
       }
     } else {

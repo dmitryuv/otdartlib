@@ -76,7 +76,7 @@ class FuzzerATextImpl extends FuzzerImpl {
           cs.format(op.chars, op.lines, fmt);
           targetAtts = op.attribs.format(fmt.merge(authorAtt));
         }
-        mut.applyFormat(new OpComponent(OpComponent.KEEP, op.chars, op.lines, targetAtts));
+        mut.applyFormat(new OpComponent.createFormat(op.chars, op.lines, targetAtts));
         pos += op.chars;
       });
     }

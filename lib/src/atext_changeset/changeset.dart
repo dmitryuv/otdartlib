@@ -112,31 +112,32 @@ class Changeset extends ComponentList {
   
           if(left) {
             // other op goes first
-            opOut.set(OpComponent.KEEP, otherOp.chars, otherOp.lines);
-            otherOp.skip();
+            opOut = new OpComponent.createKeep(otherOp.chars, otherOp.lines);
+            otherOp = new OpComponent.empty();
           } else {
-            thisOp.copyTo(opOut);
-            thisOp.skip();
+            opOut = thisOp;
+            thisOp = new OpComponent.empty();
           }
         } else {
           // If otherOp is not removing something (that could mean it already removed thisOp)
           // then keep our operation
           if(thisOp.isNotEmpty && !otherOp.isRemove) {
-            thisOp.copyTo(opOut);
+            opOut = thisOp;
             if(thisOp.isRemove && otherOp.isNotEmpty) {
               // if thisOp is removing what was reformatted, we need to calculate new attributes for removal
-              opOut.composeAttributes(otherOp.attribs);
+              opOut = opOut.composeAttributes(otherOp.attribs);
             }
             else if(thisOp.isKeep && otherOp.isNotEmpty) {
               // both keeps here, also transform attributes
-              opOut.transformAttributes(otherOp.attribs);
+              opOut = opOut.transformAttributes(otherOp.attribs);
             }
           }
           // else, if otherOp is removing, skip thisOp ('-' or '=' at this point)
-          thisOp.skip();
-          otherOp.skip();
+          thisOp = otherOp = new OpComponent.empty();
         }
         dLen += opOut.deltaLen;
+
+        return [thisOp, otherOp, opOut];
       });
   
     return new Changeset(newOps, otherCS._newLen, author: _author, newLen: otherCS._newLen + dLen);
@@ -166,12 +167,12 @@ class Changeset extends ComponentList {
       (OpComponent thisOp, OpComponent otherOp, OpComponent opOut) {
         if (thisOp.isRemove || otherOp.isEmpty) {
           // if we've removed something, it cannot be undone by next op
-          thisOp.copyTo(opOut);
-          thisOp.skip();
+          opOut = thisOp;
+          thisOp = new OpComponent.empty();
         } else if (otherOp.isInsert || thisOp.isEmpty) {
           // if other is inserting something it should be inserted
-          otherOp.copyTo(opOut);
-          otherOp.skip();
+          opOut = otherOp;
+          otherOp = new OpComponent.empty();
         } else {
           if(otherOp.isRemove) {
             // at this point we're operating on actual chars (KEEP or INSERT) in the target string
@@ -185,19 +186,19 @@ class Changeset extends ComponentList {
             // overwise we're removing what was inserted and will skip both
             if (thisOp.isKeep) {
               // undo format changes made by thisOp and compose with otherOp
-              otherOp.copyTo(opOut)
-                .composeAttributes(thisOp.attribs.invert());
+              opOut = otherOp.composeAttributes(thisOp.attribs.invert());
             }
           } else if(otherOp.isKeep) {
             // here, thisOp is also KEEP or INSERT, so just copy it over and compose with
             // otherOp
-            thisOp.copyTo(opOut)
-              .composeAttributes(otherOp.attribs);
+            opOut = thisOp.composeAttributes(otherOp.attribs);
           }
   
-          thisOp.skip();
-          otherOp.skip();
+          thisOp = new OpComponent.empty();
+          otherOp = new OpComponent.empty();
         }
+
+        return [thisOp, otherOp, opOut];
       });
   
     return new Changeset(newOps, _oldLen, author: _author, newLen: otherCS._newLen);
@@ -229,8 +230,8 @@ class Changeset extends ComponentList {
           // But since they all should be mergeable, we can run a quick
           // reduce operation and compare the result
           var removed = mut.remove(op.chars, op.lines)
-                          .fold(new OpComponent(), (prev, op) {
-                            return prev..append(op);
+                          .fold(new OpComponent.empty(), (prev, op) {
+                            return prev.append(op);
                           });
     
           if(!removed.equalsButOpcode(op)) {

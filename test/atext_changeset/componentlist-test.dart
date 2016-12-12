@@ -93,7 +93,7 @@ void componentList_test() {
     test('test reorder', () {
       test(ops, res) {
         ops = ops.map((o) {
-          return new OpComponent(o, 1, 0, null, 'x');
+          return new OpComponent(o, 1, 0, new AttributeList(), 'x');
         });
 
         var list = new ComponentList()

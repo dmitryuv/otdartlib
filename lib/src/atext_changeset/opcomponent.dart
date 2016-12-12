@@ -5,144 +5,122 @@ part of otdartlib.atext_changeset;
  * Base operation component class, incapsulates most common functions
  * over component data. Describes operation on the text block.
  */
-class OpComponent implements Clonable {
+class OpComponent {
   static const INSERT = '+';
   static const REMOVE = '-';
   static const KEEP = '=';
   
-  String opcode;
-  int chars;
-  int lines;
-  AttributeList attribs;
-  String charBank;
+  final String opcode;
+  final int chars;
+  final int lines;
+  final AttributeList attribs;
+  final String charBank;
 
-  OpComponent([String opcode = '', int N = 0, int L = 0, AttributeList attribs, String charBank = '']) {
-    if(opcode != null) {
-      set(opcode, N, L, attribs, charBank);
-    }
+
+  // TODO: rename for consistency with OpAttribute -> insert
+  OpComponent.createInsert(this.chars, this.lines, this.attribs, this.charBank) : opcode = INSERT {
+    _validate();
   }
+  OpComponent.createRemove(this.chars, this.lines, this.attribs, this.charBank) : opcode = REMOVE {
+    _validate();
+  }
+  OpComponent.createKeep(this.chars, this.lines) : opcode = KEEP, charBank = '', attribs = new AttributeList() {
+    _validate();
+  }
+  OpComponent.createFormat(this.chars, this.lines, this.attribs) : opcode = KEEP, charBank = '' {
+    _validate();
+  }
+  OpComponent(this.opcode, this.chars, this.lines, this.attribs, this.charBank) {
+    _validate();
+  }
+
+  OpComponent.empty() : opcode = '', chars = 0, lines = 0, attribs = new AttributeList(), charBank = '';
   
-  void set(String opcode, [int N = 0, int L = 0, AttributeList attribs, String charBank = '']) {
+  void _validate() {
     if(opcode == null) throw new ArgumentError('opcode should be not null');
-    
-    this.opcode = opcode;
-    this.chars = N;
-    this.lines = L;
-    this.attribs = attribs == null ? new AttributeList() : attribs;
-    
+    if(attribs == null) throw new ArgumentError('attribs should not be null');
+
     if(isInsert || isRemove) {
       if(lines > 0 && !charBank.endsWith('\n')) {
         throw new Exception('for multiline components charbank should end up with newline');
       }
       if(chars != charBank.length) {
-        throw new Exception('charBank length should match chars in operation: expected $N got [$charBank]');
+        throw new Exception('charBank length should match chars in operation: expected $chars got [${charBank.length}]');
       }
-      this.charBank = charBank;
-    } else {
-      // make sure charbank for KEEPs is erased
-      this.charBank = '';
     }
   }
-  
-  void clear() => set('');
-  
+
   bool get isEmpty => opcode == '' || opcode == null || chars == 0; 
   bool get isNotEmpty => !isEmpty;
   bool get isInsert => opcode == INSERT;
   bool get isRemove => opcode == REMOVE;
   bool get isKeep => opcode == KEEP;
+
+  OpComponentSlicer get slicer => new OpComponentSlicer(this);
   
-  OpComponent inverted() {
+  OpComponent invert() {
     if(isInsert) {
-      return clone(REMOVE);
+      return new OpComponent.createRemove(chars, lines, attribs, charBank);
     } else if (isRemove) {
-      return clone(INSERT);
+      return new OpComponent.createInsert(chars, lines, attribs, charBank);
     } else {
-      return clone()..attribs = attribs.invert();
+      return new OpComponent.createFormat(chars, lines, attribs.invert());
     }
-  }
-
-  @override
-  OpComponent clone([String newOpcode]) => copyTo(new OpComponent(null), newOpcode);
-
-  OpComponent copyTo(OpComponent otherOp, [String newOpcode]) {
-    return otherOp..set(newOpcode ?? opcode, chars, lines, attribs, charBank);
   }
 
   /**
-   * Removes N chars and L lines from the start of this component
+   * Returns slice with N chars and L lines from the start of this component
    */
-  void trimLeft(int N, int L) {
+  OpComponent sliceLeft(int N, int L) {
     if(chars < N || lines < L) {
-      throw new Exception('op is too short for trimLeft: $chars < $N or $lines < $L');
+      throw new Exception('op is too short for sliceLeft: $chars < $N or $lines < $L');
     }
- 
-    chars -= N;
-    lines -= L;
-    if(!isKeep) {
-      charBank = charBank.substring(N);
-    }
+
+    return new OpComponent(opcode, N, L, attribs, isKeep ? charBank : charBank.substring(0, N));
   }
   
   /**
-   * Keeps N chars and L lines and trim end of this component
+   * Keeps N chars and L lines and return slice with the remainder of this component
    */
-  void trimRight(int N, int L) {
+  OpComponent sliceRight(int N, int L) {
     if(chars < N || lines < L) {
-      throw new Exception('op is too short for trimRight: $chars < $N or $lines < $L');
+      throw new Exception('op is too short for sliceRight: $chars < $N or $lines < $L');
     }
-  
-    chars = N;
-    lines = L;
-    if(!isKeep) {
-      charBank = charBank.substring(0, N);
-    }
+
+    return new OpComponent(opcode, chars - N, lines - L, attribs, isKeep ? charBank : charBank.substring(N));
   }
 
-  
-  void composeAttributes(AttributeList otherAtt) {
-    attribs = attribs.compose(otherAtt, isComposition: isKeep);
+  OpComponent composeAttributes(AttributeList otherAtt) {
+    return new OpComponent(opcode, chars, lines, attribs.compose(otherAtt, isComposition: isKeep), charBank);
   }
 
-  void transformAttributes(AttributeList otherAtt) {
-    attribs = attribs.transform(otherAtt);
+  OpComponent transformAttributes(AttributeList otherAtt) {
+    return new OpComponent(opcode, chars, lines, attribs.transform(otherAtt), charBank);
   }
 
-  void formatAttributes(AttributeList formatAtt) {
-    attribs = attribs.format(formatAtt);
+  OpComponent formatAttributes(AttributeList formatAtt) {
+    return new OpComponent(opcode, chars, lines, attribs.format(formatAtt), charBank);
   }
 
-  void invertAttributes([AttributeList exceptAtt]) {
-    attribs = attribs.invert(exceptAtt);
+  OpComponent invertAttributes([AttributeList exceptAtt]) {
+    return new OpComponent(opcode, chars, lines, attribs.invert(exceptAtt), charBank);
   }
   
   /**
    * Append another component to this one
    */
-  void append(OpComponent otherCmp) {
+  OpComponent append(OpComponent otherCmp) {
     if(otherCmp.chars > 0) {
       // allow appending to empty component
-      if(chars == 0) {
-        opcode = otherCmp.opcode;
-        attribs = otherCmp.attribs.clone();
+      if(isEmpty) {
+        return otherCmp;
       } else if(opcode != otherCmp.opcode || attribs != otherCmp.attribs) {
         throw new Exception('cannot append op with different attribs or opcodes');
       }
-    
-      chars += otherCmp.chars;
-      lines += otherCmp.lines;
-      charBank += otherCmp.charBank;
+      return new OpComponent(opcode, chars + otherCmp.chars, lines + otherCmp.lines, attribs, charBank + otherCmp.charBank);
+    } else {
+      return this;
     }
-  }
-  
-  void skipIfEmpty() {
-    if(chars == 0) {
-      skip();
-    }
-  }
-  
-  void skip() {
-    opcode = '';
   }
   
   bool operator==(other) => equalsButOpcode(other) && opcode == other.opcode; 
@@ -157,23 +135,23 @@ class OpComponent implements Clonable {
   /**
    * For multiline components, return new component with single line and trimLeft current
    */
-  OpComponent takeLine() {
-    var lineComp = clone();
-    if(lines > 0) {
-      var i = charBank.indexOf('\n');
-      if(i >= 0) {
-        lineComp.trimRight(i + 1, 1);
-        trimLeft(i + 1, 1);
-        skipIfEmpty();
-      } else {
-        skip();
-      }
-    } else {
-      skip();
-    }
-    return lineComp;
-  }
-  
+//  OpComponent takeLine() {
+//    var lineComp = clone();
+//    if(lines > 0) {
+//      var i = charBank.indexOf('\n');
+//      if(i >= 0) {
+//        lineComp.trimRight(i + 1, 1);
+//        trimLeft(i + 1, 1);
+//        skipIfEmpty();
+//      } else {
+//        skip();
+//      }
+//    } else {
+//      skip();
+//    }
+//    return lineComp;
+//  }
+//
   int get deltaLen => isInsert ? chars : (isRemove ? -chars : 0);
   
   /**
@@ -189,5 +167,32 @@ class OpComponent implements Clonable {
       text: charBank,
       dLen: deltaLen
     );
+  }
+}
+
+class OpComponentSlicer {
+  OpComponent _op;
+
+  OpComponentSlicer(this._op);
+
+  bool get isEmpty => _op.isEmpty;
+  bool get isNotEmpty => _op.isNotEmpty;
+  OpComponent get current => _op;
+
+  OpComponent next(int chars, int lines) {
+    var res = _op.sliceLeft(chars, lines);
+    _op = _op.sliceRight(chars, lines);
+    return res;
+  }
+
+  OpComponent nextLine() {
+    if(_op.lines > 0) {
+      var i = _op.charBank.indexOf('\n');
+      if(i < 0) {
+        throw new Exception('op.lines > 0 but charBank does not contain newlines');
+      }
+      return next(i + 1, 1);
+    }
+    return next(_op.chars, 0);
   }
 }

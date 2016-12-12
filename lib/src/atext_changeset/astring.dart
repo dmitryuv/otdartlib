@@ -1,6 +1,7 @@
 part of otdartlib.atext_changeset;
 
 class AString implements Clonable {
+  // TODO: make final
   String atts;
   String text;
   int dLen;
@@ -17,7 +18,8 @@ class AString implements Clonable {
   bool get isNotEmpty => !isEmpty;
   
   @override
-  AString clone() => new AString(atts: this.atts, text: this.text, dLen: this.dLen, pool: this.pool);
+//  AString clone() => new AString(atts: this.atts, text: this.text, dLen: this.dLen, pool: this.pool);
+  AString clone() => this;
 
   Map pack() => { 'a': atts, 's': text };
   
