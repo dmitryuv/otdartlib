@@ -129,7 +129,8 @@ void changeset_test() {
       transform('longer op should not inject bad keeps into transformed op', 'X:4>1=1-2+3\$abcde', 'X:4>4=4|1+4\$qwe\n', 'left', clist([['=',1,0,null,''],['-',2,0,null,'ab'],['+',3,0,null,'cde']]));
   
       transform('both keeps', 'X:4>0*0*1=4', 'X:4>0=2*2*3=2', 'left', 'X:4>0*0*1=2^3*0*1=2');
-      transform('push formatting op by insert', 'X:2>0^0*3=2+1\$a', 'X:2>4*0+4\$abcd', 'left', 'X:6>1=4^0*3=2+1\$a');
+      transform('push formatting op by insert', 'X:2>1^0*3=2+1\$a', 'X:2>4*0+4\$abcd', 'left', 'X:6>1=4^0*3=2+1\$a');
+      transform('split formatting by insert', 'X:4>0*0=4', 'X:4>2=2*1+2\$ab', 'left', 'X:6>0*0=2=2*0=2');
   
       transform('remove what was reformatted', 'X:2<2*0*1-2\$ab', 'X:2>0^0*2*3=2', 'left', 'X:2<2*3*1*2-2\$ab');
     });

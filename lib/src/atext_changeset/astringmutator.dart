@@ -41,7 +41,7 @@ class AStringMutator {
         _current = _iter.current;
 
         if(!_current.isInsert || (_current.lines == 1 && _iterFoundNewline) || _current.lines > 1) {
-          throw new Exception('cannot iterate over non-astring (should contain only inserts)');
+          throw new Exception('cannot iterate over non-astring (should contain only inserts and single newline)');
         }
         if(_current.lines == 1) {
           _iterFoundNewline = true;

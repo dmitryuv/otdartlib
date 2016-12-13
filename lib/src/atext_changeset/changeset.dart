@@ -44,6 +44,11 @@ class Changeset extends ComponentList {
     
     super._unpack(astr, cs['p']);
     _author = cs['u'];
+
+    int calculatedDelta = this.fold(0, (int prev, OpComponent op) => prev + op.deltaLen).abs();
+    if(delta != calculatedDelta) {
+      throw new Exception('changeset delta ($delta) does not match operations delta ($calculatedDelta)');
+    }
   }
   
   /**
@@ -170,7 +175,7 @@ class Changeset extends ComponentList {
           opOut = thisOp;
           thisOp = new OpComponent.empty();
         } else if (otherOp.isInsert || thisOp.isEmpty) {
-          // if other is inserting something it should be inserted
+          // if other is inserting something, it should be inserted
           opOut = otherOp;
           otherOp = new OpComponent.empty();
         } else {
