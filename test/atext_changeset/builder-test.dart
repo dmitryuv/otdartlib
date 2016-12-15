@@ -1,10 +1,7 @@
 part of otdartlib.test.atext_changeset;
 
 builder_test() {
-  var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
-
   alist(List atts) {
-    var list = new AttributeList();
     var rmv = new Map.fromIterable(atts.where((l) => l[0] == '^'), key: (l) => l[1], value: (l) => l[2]);
     var fmt = new Map.fromIterable(atts.where((l) => l[0] == '*'), key: (l) => l[1], value: (l) => l[2]);        
     return new AttributeList.fromMap(remove: rmv, format: fmt);

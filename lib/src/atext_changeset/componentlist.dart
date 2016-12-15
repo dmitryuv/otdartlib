@@ -51,6 +51,8 @@ class ComponentList extends DirtyList<OpComponent>{
   void addRemove(int N, int L, AttributeList alist, String charBank) => add(new OpComponent.createRemove(N, L, alist, charBank));
 
   Iterable<OpComponent> get inverted => map((op) => op.invert());
+
+  int get deltaLen => this.fold(0, (prev, next) => prev + next.deltaLen);
   
   /**
    * Reorders components to keep removals before insertions. Makes sense

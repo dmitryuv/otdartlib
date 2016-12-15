@@ -7,112 +7,183 @@ abstract class Clonable {
 class _util {
   static int parseInt36(String str) => int.parse(str, radix: 36);
   static String toString36(int num) => num.toRadixString(36);
- 
-  static zip (ComponentList list1, ComponentList list2, bool needSplitFunc(OpComponent op1, OpComponent op2), List<OpComponent> func(OpComponent op1, OpComponent op2, OpComponent opOut)) {
-    var iter1 = list1.iterator..moveNext();
-    var iter2 = list2.iterator..moveNext();
-    var res = new ComponentList();
-    var op1 = new OpComponent.empty();
-    var op1part = new OpComponent.empty();
-    var op2 = new OpComponent.empty();
-    var op2part = new OpComponent.empty();
-    var opOut = new OpComponent.empty();
-  
-    while(op1.isNotEmpty || op1part.isNotEmpty || iter1.current != null || op2.isNotEmpty || op2part.isNotEmpty || iter2.current != null) {
-      var z = _zipNext(op1, op1part, iter1);
-      op1 = z[0]; op1part = z[1];
+}
 
-      z = _zipNext(op2, op2part, iter2);
-      op2 = z[0]; op2part = z[1];
-  
-      if(op1.isNotEmpty && op2.isNotEmpty) {
-        // pre-splitting into equal slices greatly reduces
-        // number of code branches and makes code easier to read
-        bool split = needSplitFunc(op1, op2);
-  
-        if(split && op1.chars > op2.chars) {
-          op1part = op1.sliceRight(op2.chars, op2.lines);
-          op1 = op1.sliceLeft(op2.chars, op2.lines);
-        } else if(split && op1.chars < op2.chars) {
-          op2part = op2.sliceRight(op1.chars, op1.lines);
-          op2 = op2.sliceLeft(op1.chars, op1.lines);
+
+abstract class _ChangesetMutatorBase {
+  Changeset _cs;
+  BackBufferIterator<OpComponent> _iter;
+  ComponentList _res = new ComponentList();
+  OpComponentSlicer _slicedOp;
+  bool _eof = false;
+  String _nonSplitOpcode;
+
+  _ChangesetMutatorBase(this._cs, this._nonSplitOpcode) {
+    _iter = _cs.iterator;
+  }
+
+  bool get eof => _eof;
+
+  OpComponent _peek() {
+    if(_slicedOp == null || _slicedOp.isEmpty) {
+      while(_slicedOp == null) {
+        if(!_iter.moveNext()) {
+          _eof = true;
+          return new OpComponent.empty();
         }
-      }
-  
-      if(op1.isNotEmpty || op2.isNotEmpty) {
-        var r = func(op1, op2, opOut);
-        op1 = r[0];
-        op2 = r[1];
-        opOut = r[2];
-      }
-  
-      if(opOut.isNotEmpty) {
-        res.add(opOut);
-        opOut = new OpComponent.empty();
+        _slicedOp = _iter.current.slicer;
       }
     }
-  
+
+    return _slicedOp.current;
+  }
+
+  OpComponent _take(int chars, int lines) {
+    var op = _peek();
+    OpComponent res;
+
+    if(op.chars <= chars || op.opcode == _nonSplitOpcode) {
+      // take whole
+      res = op;
+      _slicedOp = null;
+    } else {
+      // take part
+      res = _slicedOp.next(chars, lines);
+    }
+
     return res;
   }
 
-//  static zip (ComponentList list1, ComponentList list2, bool needSplitFunc(OpComponent op1, OpComponent op2), void func(OpComponent op1, OpComponent op2, OpComponent opOut)) {
-//    BackBufferIterator iter1 = list1.iterator;
-//    BackBufferIterator iter2 = list2.iterator;
-//    var res = new ComponentList();
-//    var op1 = new OpComponent(null);
-//    var op2 = new OpComponent(null);
-//    var opOut = new OpComponent(null);
-//
-//    while(iter1.moveNext() || iter2.moveNext()) {
-//      iter1.current?.copyTo(op1);
-//      iter2.current?.copyTo(op2);
-//
-//      if(op1.isNotEmpty && op2.isNotEmpty) {
-//        // pre-splitting into equal slices greatly reduces
-//        // number of code branches and makes code easier to read
-//        bool split = needSplitFunc(op1, op2);
-//
-//        if(split) {
-//          // if op1.chars <= op2.chars, it's true that op1.lines <= op2.lines
-//          int c = min(op1.chars, op2.chars);
-//          int l = min(op1.lines, op2.lines);
-//          iter1.pushBack(op1.sliceRight(new OpComponent(null), c, l).clone());
-//          iter2.pushBack(op2.sliceRight(new OpComponent(null), c, l).clone());
-//        }
-//      }
-//
-//      if(op1.isNotEmpty || op2.isNotEmpty) {
-//        func(op1, op2, opOut);
-//
-//        if(op1.isNotEmpty) {
-//          iter1.pushBack(op1.clone());
-//        }
-//        if(op2.isNotEmpty) {
-//          iter2.pushBack(op2.clone());
-//        }
-//      }
-//
-//      if(opOut.isNotEmpty) {
-//        res.add(opOut.clone());
-//        opOut.skip();
-//      }
-//    }
-//
-//    return res;
-//  }
+  _finalize() {
+    if(_slicedOp != null) {
+      _res.add(_slicedOp.current);
+    }
+    while(_iter.moveNext()) {
+      _res.add(_iter.current);
+    }
+  }
 
+  format(OpComponentSlicer slicer);
+  insert(OpComponentSlicer slicer);
+  remove(OpComponentSlicer slicer);
+  Changeset finish();
+}
 
-  static List<OpComponent> _zipNext(OpComponent op, OpComponent part, BackBufferIterator<OpComponent> iter) {
-    if(op.isEmpty) {
-      if(part.isNotEmpty) {
-        op = part;
-        part = new OpComponent.empty();
-      } else if(iter.current != null) {
-        op = iter.current;
-        iter.moveNext();
+class ChangesetMutator extends _ChangesetMutatorBase {
+
+  ChangesetMutator(Changeset cs) : super(cs, OpComponent.REMOVE);
+
+  @override
+  format(OpComponentSlicer slicer) {
+    var op = _take(slicer.current.chars, slicer.current.lines);
+    if(op.isEmpty) return;
+
+    if(!op.isRemove) {
+      // KEEPs and INSERTs can be reformatted
+      var formatter = slicer.next(op.chars, op.lines);
+      _res.add(op.composeAttributes(formatter.attribs));
+    } else {
+      // REMOVEs should be kept as-is, they do not count as SKIPs
+      _res.add(op);
+    }
+  }
+
+  @override
+  remove(OpComponentSlicer slicer) {
+    var op = _take(slicer.current.chars, slicer.current.lines);
+    if(op.isEmpty) return;
+
+    if(op.isRemove) {
+      // keep original removes, they can't be affected
+      _res.add(op);
+    } else {
+      var removal = slicer.next(op.chars, op.lines);
+      if (op.isKeep) {
+        // KEEPs should be removed, FORMATs should be undo'ed and removed, INSERTS are dropped
+        _res.add(op.isFormat ? removal.composeAttributes(op.attribs.invert()) : removal);
+      } else if(!op.equalsButOpcode(removal)) {
+        // op is INSERT, and we removed somethign wrong from it
+        throw new Exception('removed in composition does not match original "${op.charBank.hashCode}" != "${removal.charBank.hashCode}"');
       }
     }
+  }
 
-    return [op, part];
+  @override
+  insert(OpComponentSlicer slicer) {
+    _res.add(slicer.next(slicer.current.chars, slicer.current.lines));
+  }
+
+  @override
+  Changeset finish() {
+    _finalize();
+
+    return new Changeset(_res, _cs._oldLen, author: _cs._author, newLen: _cs._oldLen + _res.deltaLen);
+  }
+}
+
+
+class ChangesetTransformer extends _ChangesetMutatorBase {
+  String _side;
+
+  ChangesetTransformer(Changeset cs, this._side) : super(cs, OpComponent.INSERT);
+
+  @override
+  format(OpComponentSlicer slicer) {
+    var op = _take(slicer.current.chars, slicer.current.lines);
+    if(op.isEmpty) return;
+
+    if(!op.isInsert) {
+      // KEEPs and REMOVEs can be reformatted
+      var formatter = slicer.next(op.chars, op.lines);
+      if(op.isKeep) {
+        _res.add(op.transformAttributes(formatter.attribs));
+      } else {
+        _res.add(op.composeAttributes(formatter.attribs));
+      }
+    } else {
+      // INSERTs should be kept as-is, they do not count as SKIPs
+      _res.add(op);
+    }
+  }
+
+  @override
+  remove(OpComponentSlicer slicer) {
+    var op = _take(slicer.current.chars, slicer.current.lines);
+    if(op.isEmpty) return;
+
+    if(op.isInsert) {
+      // keep original inserts, they can't be affected
+      _res.add(op);
+    } else {
+      slicer.next(op.chars, op.lines);
+    }
+  }
+
+  @override
+  insert(OpComponentSlicer slicer) {
+    var current = _peek();
+    var op = slicer.current;
+    bool left = true;
+
+    if(current.isInsert && op.isNotEmpty) {
+      bool ln = current.charBank[0] == '\n';
+      bool rn = op.charBank[0] == '\n';
+        // if one of the inserts starts with a newlines, it goes last to not break lines, if both - use tie break
+      left = ((ln || rn) && (ln != rn)) ? ln : (_side == 'left');
+    }
+    if(left) {
+      // other op goes first
+      _res.add(new OpComponent.createKeep(op.chars, op.lines));
+      slicer.next(op.chars, op.lines);
+    } else {
+      _res.add(_take(current.chars, current.lines));
+    }
+  }
+
+  @override
+  Changeset finish(int newLen) {
+    _finalize();
+
+    return new Changeset(_res, newLen, author: _cs._author, newLen: newLen + _res.deltaLen);
   }
 }

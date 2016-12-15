@@ -1,9 +1,6 @@
 part of otdartlib.test.atext_changeset;
 
 void astringMutator_test() {
-  clone(obj) {
-    return JSON.decode(JSON.encode(obj));
-  }
   var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
     
   group('AStringMutator', () {

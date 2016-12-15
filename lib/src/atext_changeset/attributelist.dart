@@ -140,7 +140,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
       }
       if(!found) {
         if(!isComposition && otherOp.opcode == OpAttribute.REMOVE) {
-          throw new Exception('trying to remove non-existing attribute');
+          throw new Exception('trying to remove non-existing attribute: ${otherOp.opcode}${otherOp.key} from ${list.fold('', (p, n) => p + n.opcode + n.key)}');
         }
         list.add(otherOp);
       }

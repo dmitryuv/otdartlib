@@ -34,6 +34,7 @@ class OpComponent {
     _validate();
   }
 
+  // TODO: potentially empty opcode is not a valid enum, we can use '=' opcode instead
   OpComponent.empty() : opcode = '', chars = 0, lines = 0, attribs = new AttributeList(), charBank = '';
   
   void _validate() {
@@ -55,6 +56,9 @@ class OpComponent {
   bool get isInsert => opcode == INSERT;
   bool get isRemove => opcode == REMOVE;
   bool get isKeep => opcode == KEEP;
+  // additional custom cases for KEEP
+  bool get isSkip => isKeep && attribs.isEmpty;
+  bool get isFormat => !isSkip;
 
   OpComponentSlicer get slicer => new OpComponentSlicer(this);
   
@@ -110,7 +114,7 @@ class OpComponent {
    * Append another component to this one
    */
   OpComponent append(OpComponent otherCmp) {
-    if(otherCmp.chars > 0) {
+    if(otherCmp.isNotEmpty) {
       // allow appending to empty component
       if(isEmpty) {
         return otherCmp;
@@ -132,26 +136,7 @@ class OpComponent {
       // if one of the ops is KEEP, don't check charBank
       && ((isKeep || other.isKeep) || (charBank == other.charBank));
 
-  /**
-   * For multiline components, return new component with single line and trimLeft current
-   */
-//  OpComponent takeLine() {
-//    var lineComp = clone();
-//    if(lines > 0) {
-//      var i = charBank.indexOf('\n');
-//      if(i >= 0) {
-//        lineComp.trimRight(i + 1, 1);
-//        trimLeft(i + 1, 1);
-//        skipIfEmpty();
-//      } else {
-//        skip();
-//      }
-//    } else {
-//      skip();
-//    }
-//    return lineComp;
-//  }
-//
+
   int get deltaLen => isInsert ? chars : (isRemove ? -chars : 0);
   
   /**
@@ -185,10 +170,13 @@ class OpComponentSlicer {
     return res;
   }
 
+  /**
+   * For multiline components, return new component with single line and trimLeft current
+   */
   OpComponent nextLine() {
     if(_op.lines > 0) {
       var i = _op.charBank.indexOf('\n');
-      if(i < 0) {
+      if(i < 0 && !_op.isKeep) {
         throw new Exception('op.lines > 0 but charBank does not contain newlines');
       }
       return next(i + 1, 1);

@@ -5,7 +5,6 @@ void opComponent_test() {
 
   group('OpComponent', () {
     test('test constructor', () {
-      var pool = [['foo','bar']];
       expect(new OpComponent.createKeep(0, 0).opcode, equals('='));
       expect(new OpComponent.createInsert(0, 0, new AttributeList(), '').opcode, equals('+'));
       expect(new OpComponent.createRemove(0, 0, new AttributeList(), '').opcode, equals('-'));

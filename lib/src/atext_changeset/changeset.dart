@@ -45,7 +45,7 @@ class Changeset extends ComponentList {
     super._unpack(astr, cs['p']);
     _author = cs['u'];
 
-    int calculatedDelta = this.fold(0, (int prev, OpComponent op) => prev + op.deltaLen).abs();
+    int calculatedDelta = deltaLen.abs();
     if(delta != calculatedDelta) {
       throw new Exception('changeset delta ($delta) does not match operations delta ($calculatedDelta)');
     }
@@ -81,135 +81,59 @@ class Changeset extends ComponentList {
     if(side != 'left' && side != 'right') {
       throw new Exception('side should be \'left\' or \'right\'');
     }
-    
     sort();
     otherCS.sort();
-  
-    var dLen = 0;
-    var newOps = _util.zip(this, otherCS, 
-      (OpComponent thisOp, OpComponent otherOp) {
-        // INSERTs are handled unsplitted, always
-        var hasInsert = thisOp.isInsert || otherOp.isInsert;
-        // KEEPs can be reduced by REMOVEs or extended by INSERTs
-        var hasKeep = thisOp.isKeep || otherOp.isKeep;
-        // REMOVEs can reduce KEEPs other REMOVEs
-        var hasRemove = thisOp.isRemove || otherOp.isRemove; 
-        // in both situation we can split ops into equal slices
-        return (hasKeep || hasRemove) && !hasInsert;
-      }, 
-      (OpComponent thisOp, OpComponent otherOp, OpComponent opOut) {
-        if(thisOp.isNotEmpty && otherOp.isNotEmpty && (thisOp.isInsert || otherOp.isInsert)) {
-          bool left;
-  
-          var thisChar = thisOp.charBank.isNotEmpty ? thisOp.charBank[0] : '';
-          var otherChar = otherOp.charBank.isNotEmpty ? otherOp.charBank[0] : '';
-  
-          if(thisOp.opcode != otherOp.opcode) {
-            // the op that does insert goes first
-            left = otherOp.isInsert;
-          } else if((thisChar == '\n' || otherChar == '\n') && thisChar != otherChar) {
-            // insert string that doesn't start with a newline first
-            // to not break up lines
-            left = otherChar != '\n';
-          } else {
-            left = side == 'left';
-          }
-  
-          if(left) {
-            // other op goes first
-            opOut = new OpComponent.createKeep(otherOp.chars, otherOp.lines);
-            otherOp = new OpComponent.empty();
-          } else {
-            opOut = thisOp;
-            thisOp = new OpComponent.empty();
-          }
-        } else {
-          // If otherOp is not removing something (that could mean it already removed thisOp)
-          // then keep our operation
-          if(thisOp.isNotEmpty && !otherOp.isRemove) {
-            opOut = thisOp;
-            if(thisOp.isRemove && otherOp.isNotEmpty) {
-              // if thisOp is removing what was reformatted, we need to calculate new attributes for removal
-              opOut = opOut.composeAttributes(otherOp.attribs);
-            }
-            else if(thisOp.isKeep && otherOp.isNotEmpty) {
-              // both keeps here, also transform attributes
-              opOut = opOut.transformAttributes(otherOp.attribs);
-            }
-          }
-          // else, if otherOp is removing, skip thisOp ('-' or '=' at this point)
-          thisOp = otherOp = new OpComponent.empty();
-        }
-        dLen += opOut.deltaLen;
 
-        return [thisOp, otherOp, opOut];
-      });
-  
-    return new Changeset(newOps, otherCS._newLen, author: _author, newLen: otherCS._newLen + dLen);
+    var mut = new ChangesetTransformer(this, side);
+
+    otherCS.forEach((OpComponent op) => _invokeMutation(mut, op.slicer));
+
+    return mut.finish(otherCS._newLen);
   }
 
   /**
    * Compose this changeset with other changeset, producing cumulative result of both changes.
    */
   Changeset compose(Changeset otherCS) {
-    if(_newLen != otherCS._oldLen) {
+    if (_newLen != otherCS._oldLen) {
       throw new Exception('changesets from different document versions are not composable');
     }
-  
     sort();
     otherCS.sort();
-  
-    var newOps = _util.zip(this, otherCS, 
-      (OpComponent thisOp, OpComponent otherOp) {
-        var noSplit = thisOp.isRemove || otherOp.isInsert;
-        // KEEPS can be replaced by REMOVEs
-        var hasKeep = thisOp.isKeep || otherOp.isKeep;
-        // REMOVEs can affect KEEPs and INSERTs but not other REMOVEs
-        var hasRemoveActual = (thisOp.opcode != otherOp.opcode) && (thisOp.isRemove || otherOp.isRemove); 
-        // in both cases we can split ops into equal slices
-        return (hasKeep || hasRemoveActual) && !noSplit;
-      },
-      (OpComponent thisOp, OpComponent otherOp, OpComponent opOut) {
-        if (thisOp.isRemove || otherOp.isEmpty) {
-          // if we've removed something, it cannot be undone by next op
-          opOut = thisOp;
-          thisOp = new OpComponent.empty();
-        } else if (otherOp.isInsert || thisOp.isEmpty) {
-          // if other is inserting something, it should be inserted
-          opOut = otherOp;
-          otherOp = new OpComponent.empty();
-        } else {
-          if(otherOp.isRemove) {
-            // at this point we're operating on actual chars (KEEP or INSERT) in the target string
-            // we don't validate KEEPs since they just add format and not keep final attributes list
-            var validRemove = thisOp.isKeep || thisOp.equalsButOpcode(otherOp);
-            if(!validRemove) {
-              throw new Exception('removed in composition does not match original ${thisOp.charBank} != ${otherOp.charBank}');
-            }
-  
-            // if there was no insert on our side, just keep the other op,
-            // overwise we're removing what was inserted and will skip both
-            if (thisOp.isKeep) {
-              // undo format changes made by thisOp and compose with otherOp
-              opOut = otherOp.composeAttributes(thisOp.attribs.invert());
-            }
-          } else if(otherOp.isKeep) {
-            // here, thisOp is also KEEP or INSERT, so just copy it over and compose with
-            // otherOp
-            opOut = thisOp.composeAttributes(otherOp.attribs);
-          }
-  
-          thisOp = new OpComponent.empty();
-          otherOp = new OpComponent.empty();
-        }
 
-        return [thisOp, otherOp, opOut];
-      });
-  
-    return new Changeset(newOps, _oldLen, author: _author, newLen: otherCS._newLen);
+    var mut = new ChangesetMutator(this);
+    otherCS.forEach((OpComponent op) {
+      var slicer = op.slicer;
+
+      _invokeMutation(mut, slicer);
+
+      if (mut.eof) {
+        mut.insert(slicer);
+      }
+    });
+
+    var newCs = mut.finish();
+    if(newCs._newLen != otherCS._newLen) {
+      throw new Exception('new changeset length (${newCs._newLen}) does not match expected length (${otherCS._newLen})');
+    }
+    return newCs;
   }
-  
-  /*
+
+  _invokeMutation(_ChangesetMutatorBase mut, OpComponentSlicer slicer) {
+    var op = slicer.current;
+
+    while (!mut.eof && slicer.isNotEmpty) {
+      if (op.isInsert) {
+        mut.insert(slicer);
+      } else if (op.isRemove) {
+        mut.remove(slicer);
+      } else {
+        mut.format(slicer);
+      }
+    }
+  }
+
+    /*
    * Invert current changeset. That is, inverted changeset if applied to the modified document will produce result
    * that is equal to document before the modification: apply(apply(doc, cs), invert(cs)) == doc
    */
@@ -242,12 +166,10 @@ class Changeset extends ComponentList {
           if(!removed.equalsButOpcode(op)) {
             throw new Exception('actual does not match removed');
           }
-        } else if (op.isKeep) {
-          if(op.attribs.isEmpty) {
-            mut.skip(op.chars, op.lines);
-          } else {
-            mut.applyFormat(op);
-          }
+        } else if (op.isSkip) {
+          mut.skip(op.chars, op.lines);
+        } else if (op.isFormat) {
+          mut.applyFormat(op);
         }
       }
     });

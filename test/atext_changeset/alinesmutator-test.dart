@@ -4,7 +4,6 @@ void alinesMutator_test() {
   clone(obj) {
     return JSON.decode(JSON.encode(obj));
   }
-  var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
 
   group('ALinesMutator', () {
     var pool = [['foo','bar'], ['author','x'], ['bold','true'], ['list', 1], ['italic', true]];

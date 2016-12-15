@@ -5,8 +5,6 @@ void componentList_test() {
     return JSON.decode(JSON.encode(obj));
   }
   
-  var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
-  
   group('ComponentList', (){
     var unpacked = new AString( 
         atts: '-c*3*4+6|3=a^1^3*2*5+1=1-1+1*0+1=1-1+1|c=c=2*0|2=2-1=3+1',

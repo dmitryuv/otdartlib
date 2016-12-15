@@ -1,7 +1,6 @@
 part of otdartlib.test.ottypes;
 
 void json0_test() {
-  clone(obj) => JSON.decode(JSON.encode(obj));
   var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
 
   var json0 = new OTTypeFactory.from('json0');
