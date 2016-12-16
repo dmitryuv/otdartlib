@@ -3,7 +3,7 @@ part of otdartlib.test.ottypes;
 void json0_test() {
   var errMatcher = (msg) => predicate((Exception e) => new RegExp(msg).hasMatch(e.toString()));
 
-  var json0 = new OTTypeFactory.from('json0');
+  var json0 = new OTTypeFactory.from('json0') as OT_json0;
   
   group('json0', () {
     group('sanity', () {

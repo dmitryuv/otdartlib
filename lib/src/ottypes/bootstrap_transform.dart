@@ -1,12 +1,12 @@
 // This file is a direct port of ShareJS json0 library https://github.com/ottypes/json0
 part of otdartlib.ottypes;
 
-abstract class _BootstrapTransform {
-  transformComponent(List dest, Map c, Map otherC, String type);
+abstract class _BootstrapTransform<T> {
+  transformComponent(List dest, T c, T otherC, String type);
   append(List dest, Map c);
   checkValidOp(List op);
   
-  transformComponentX(Map left, Map right, List destLeft, List destRight) {
+  transformComponentX(T left, T right, List destLeft, List destRight) {
     transformComponent(destLeft, left, right, 'left');
     transformComponent(destRight, right, left, 'right');
   }

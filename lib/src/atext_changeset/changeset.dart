@@ -84,11 +84,11 @@ class Changeset extends ComponentList {
     sort();
     otherCS.sort();
 
-    var mut = new ChangesetTransformer(this, side);
+    var mut = new ChangesetTransformer(this, side, otherCS._newLen);
 
     otherCS.forEach((OpComponent op) => _invokeMutation(mut, op.slicer));
 
-    return mut.finish(otherCS._newLen);
+    return mut.finish();
   }
 
   /**

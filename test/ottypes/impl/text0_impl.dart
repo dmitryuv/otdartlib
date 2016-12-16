@@ -1,10 +1,10 @@
 part of otdartlib.test.ottypes;
 
-class FuzzerText0Impl extends FuzzerImpl {
+class FuzzerText0Impl extends FuzzerImpl<String> {
   var _text0 = new OT_text0();
   
   @override
-  List generateRandomOp(docStr) {
+  List generateRandomOp(String docStr) {
     var pct = 0.9;
 
     var op = [];

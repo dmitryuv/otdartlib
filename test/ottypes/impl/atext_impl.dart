@@ -1,6 +1,6 @@
 part of otdartlib.test.ottypes;
 
-class FuzzerATextImpl extends FuzzerImpl {
+class FuzzerATextImpl extends FuzzerImpl<ADocument> {
   String randomAuthor() {
     // increase chance of submitting a change on behalf of the same author
     var a = ['1','2','1','3','2','4','3','5','4'];

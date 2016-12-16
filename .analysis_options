@@ -1,0 +1,10 @@
+analyzer:
+  strong-mode: true
+  errors:
+    assignment_to_const: error
+    assignment_to_final: error
+    missing_return: error
+    not_enough_required_arguments: error
+    undefined_function: error
+    undefined_method: error
+    undefined_class: error

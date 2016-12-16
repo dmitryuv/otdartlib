@@ -163,7 +163,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
    * ([(img,1), ^], [(img,2), *]) => throws
    */
   AttributeList transform(AttributeList otherAtts) {
-    var res = [];
+    var res = <OpAttribute>[];
     for(var i = 0; i < length; i++) {
       var thisOp = this[i];
       var skip = false;
@@ -205,7 +205,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
    * - removals of non-existing Ns will be dropped
    */
   AttributeList format(AttributeList formatAtts) {
-    var res = [];
+    var res = <OpAttribute>[];
     for(var i = 0; i < formatAtts.length; i++) {
       var formatOp = formatAtts[i];
       var skip = false;

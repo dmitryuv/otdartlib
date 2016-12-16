@@ -26,7 +26,7 @@ part of otdartlib.ottypes;
 // NOTE: The global scope here is shared with other sharejs files when built with closure.
 // Be careful what ends up in your namespace.
 
-class OT_text0 extends OTTypeFactory<String, List> with _BootstrapTransform {
+class OT_text0 extends OTTypeFactory<String, List> with _BootstrapTransform<Map> {
   static final _name = 'text0';
   static final _uri = 'http://sharejs.org/types/textv0';
   

@@ -1,6 +1,6 @@
 part of otdartlib.test.ottypes;
 
-class FuzzerJson0Impl extends FuzzerImpl {
+class FuzzerJson0Impl extends FuzzerImpl<dynamic> {
   final bool _testOin;
   
   FuzzerJson0Impl({bool oin: false}) : _testOin = oin;
@@ -88,7 +88,7 @@ class FuzzerJson0Impl extends FuzzerImpl {
       var path = randomPath(container['data']);
 
       // parent = the container for the operand. parent[key] contains the operand.
-      var parent = container;
+      dynamic parent = container;
       var key = 'data';
       path.forEach((p) {
         parent = parent[key];

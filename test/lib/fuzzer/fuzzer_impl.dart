@@ -1,8 +1,8 @@
 part of otdartlib.fuzzer;
 
-abstract class FuzzerImpl {
-  List generateRandomOp(doc);
-  dynamic serialize(doc);
+abstract class FuzzerImpl<T> {
+  List generateRandomOp(T doc);
+  dynamic serialize(T doc);
 
   dynamic clone(obj);
      

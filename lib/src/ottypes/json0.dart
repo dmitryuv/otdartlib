@@ -18,7 +18,7 @@ part of otdartlib.ottypes;
  * JSON OT Type
  * @type {*}
  */
-class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform {
+class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform<Map> {
   static final _name = 'json0';
   static final _uri = 'http://sharejs.org/types/JSONv0';
 
@@ -26,7 +26,11 @@ class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform {
 //  final Function _deepEq = (a, b) => true;
 
   @override
-  Map create([Map initial]) {
+  dynamic create([dynamic initial]) {
+    if(initial != null && initial is! Map) {
+      throw new Exception('Initial data must be a map');
+    }
+
     // Null instead of undefined if you don't pass an argument.
     return initial == null ? null : new Map.from(initial);
   }
@@ -89,7 +93,7 @@ class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform {
   dynamic _cloneObj(dynamic obj) => JSON.decode(JSON.encode(obj));
   
   @override
-  dynamic apply(snapshot, List op) {
+  dynamic apply(dynamic snapshot, List op) {
     checkValidOp(op);
 
     op = _cloneObj(op);
@@ -101,7 +105,7 @@ class OT_json0 extends OTTypeFactory<dynamic, List> with _BootstrapTransform {
       var c = new _JsonOpComponent(c_);
 
       var key = 'data';
-      var elem = container;
+      dynamic elem = container;
 
       c.path.forEach((p) {
         elem = elem[key];

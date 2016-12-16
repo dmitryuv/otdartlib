@@ -7,7 +7,11 @@ class OT_atext extends OTTypeFactory<ADocument, Changeset> {
   static final _name = 'atext';
   static final _uri = 'https://github.com/dmitryuv/atext-changeset';
   
-  ADocument create([String initial]) {
+  ADocument create([initial]) {
+    if(initial != null && initial is! String) {
+      throw new Exception('Initial data must be a string');
+    }
+
     if(initial != null) {
       return new ADocument.fromText(initial);
     } else {

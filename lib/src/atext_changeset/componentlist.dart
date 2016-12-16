@@ -67,10 +67,10 @@ class ComponentList extends DirtyList<OpComponent>{
       return;
     }
   
-    var res = [];
-    var inserts = [];
-    var removes = [];
-    var keeps = [];
+    var res = <OpComponent>[];
+    var inserts = <OpComponent>[];
+    var removes = <OpComponent>[];
+    var keeps = <OpComponent>[];
   
     var lastOpcode = '';
     forEach((op) {
@@ -118,7 +118,6 @@ class ComponentList extends DirtyList<OpComponent>{
     pool ??= [];
 
     var res = new AString(pool: pool);
-    var buf = new AString();
     var last = new OpComponent.empty();
     var inner = new OpComponent.empty();
 

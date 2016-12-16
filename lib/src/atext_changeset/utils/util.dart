@@ -124,8 +124,9 @@ class ChangesetMutator extends _ChangesetMutatorBase {
 
 class ChangesetTransformer extends _ChangesetMutatorBase {
   String _side;
+  int _newLen;
 
-  ChangesetTransformer(Changeset cs, this._side) : super(cs, OpComponent.INSERT);
+  ChangesetTransformer(Changeset cs, this._side, this._newLen) : super(cs, OpComponent.INSERT);
 
   @override
   format(OpComponentSlicer slicer) {
@@ -181,9 +182,9 @@ class ChangesetTransformer extends _ChangesetMutatorBase {
   }
 
   @override
-  Changeset finish(int newLen) {
+  Changeset finish() {
     _finalize();
 
-    return new Changeset(_res, newLen, author: _cs._author, newLen: newLen + _res.deltaLen);
+    return new Changeset(_res, _newLen, author: _cs._author, newLen: _newLen + _res.deltaLen);
   }
 }

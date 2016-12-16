@@ -15,7 +15,7 @@ abstract class OTType<T, E> {
   String get name;
   String get uri;
 
-  T create([initial]);
+  T create([T initial]);
   T apply(T doc, E op);
   E transform(E op, E otherOp, String side);
   E invert(E op);
