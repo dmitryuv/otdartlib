@@ -42,7 +42,7 @@ class ComponentList extends DirtyList<OpComponent>{
   }
 
   @override
-  BackBufferIterator<OpComponent> get iterator => new BackBufferIterator._internal(super.iterator);
+  BackBufferIterator<OpComponent> get iterator => new BackBufferIterator<OpComponent>._internal(super.iterator);
 
   void addKeep(int N, int L) => add(new OpComponent.createKeep(N, L));
 

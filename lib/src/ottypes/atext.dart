@@ -13,7 +13,7 @@ class OT_atext extends OTTypeFactory<ADocument, Changeset> {
     }
 
     if(initial != null) {
-      return new ADocument.fromText(initial);
+      return new ADocument.fromText(initial as String);
     } else {
       return new ADocument();
     }

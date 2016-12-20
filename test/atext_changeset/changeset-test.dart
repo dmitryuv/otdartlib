@@ -12,14 +12,14 @@ void changeset_test() {
     var sampleLines = [{'a': '*0+2|1+2', 's': 'abc\n'}, { 'a': '+4*1|1+2', 's': 'defgh\n'} ];
     var samplePool = [['author', 'x'], ['bold', true], ['italic', true], ['author','y']];
     
-    getDoc() {
-      return new ADocument.unpack(clone({ 'lines': sampleLines, 'pool': samplePool}));
+    getDoc([lines]) {
+      return new ADocument.unpack(clone({ 'lines': lines ?? sampleLines, 'pool': samplePool}));
     }
   
     group('applyTo', () {
-      apply(name, cs, expected, [err, doc]) {
+      apply(name, cs, expected, [err, lines]) {
         test(name, () {
-          if (doc == null) doc = getDoc();
+          var doc = getDoc(lines);
           if(err != null) {
             expect(() => new Changeset.unpack(cs)..applyTo(doc), throwsA(errMatcher(err)));
           }
@@ -36,11 +36,49 @@ void changeset_test() {
         [{'a': '*0+1*2|1+3', 's': 'abc\n'}, {'a': '*3|1+7', 's': 'defgij\n'}]
         );
   
-      apply('throws if removed does not match actual', 
+      apply('throws if removed does not match original',
         {'op': 'X:a<1=1-1\$b', 'p': [], 'u': 'y'},
         null,
-        'not match removed'
+        'not match original'
         );
+
+      apply('insert at the start of 2 lines',
+        {'op': 'X:a>5*0+2|1=4*1+3\$ABCDE', 'p': [['author', 'x'], ['author', 'y']]},
+        [{'a': '*0+4|1+2', 's': 'ABabc\n'}, { 'a': '*3+3+4*1|1+2', 's': 'CDEdefgh\n'} ]
+        );
+
+      apply('leave last line open',
+        {'op': 'X:a>2|2=a*0+2\$AB', 'p': [['author', 'x']]},
+        [{'a': '*0+2|1+2', 's': 'abc\n'}, { 'a': '+4*1|1+2', 's': 'defgh\n'}, {'a': '*0+2', 's': 'AB'} ]
+        );
+
+      apply('append to a single-line document with newline',
+        {'op': 'X:3>5=3*0|1+3*0+2\$AB\nCD', 'p': [['author', 'y']]},
+        [{'a': '*0+3*3|1+3', 's': 'abcAB\n'}, {'a': '*3+2', 's': 'CD'}],
+        null,
+        [{'a': '*0+3', 's': 'abc'}]
+      );
+
+      apply('append to a single-line document w/o newline',
+        {'op': 'X:3>2=3*0+2\$AB', 'p': [['author', 'y']]},
+        [{'a': '*0+3*3+2', 's': 'abcAB'}],
+        null,
+        [{'a': '*0+3', 's': 'abc'}]
+      );
+
+      apply('prepend to a single-line doc',
+        {'op': 'X:3>2*0+2\$AB', 'p': [['author', 'y']]},
+        [{'a': '*3+2*0+3', 's': 'ABabc'}],
+        null,
+        [{'a': '*0+3', 's': 'abc'}]
+      );
+
+      apply('prepend to a single-line doc and split line',
+        {'op': 'X:3>4*0|1+3*0+1\$AB\nC', 'p': [['author', 'y']]},
+        [{'a': '*3|1+3', 's': 'AB\n'}, {'a': '*3+1*0+3', 's': 'Cabc'}],
+        null,
+        [{'a': '*0+3', 's': 'abc'}]
+      );
     });
   
     group('invert', () {

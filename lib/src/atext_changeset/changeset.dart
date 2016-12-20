@@ -86,7 +86,7 @@ class Changeset extends ComponentList {
 
     var mut = new ChangesetTransformer(this, side, otherCS._newLen);
 
-    otherCS.forEach((OpComponent op) => _invokeMutation(mut, op.slicer));
+    otherCS.forEach((OpComponent op) => mut.apply(op.slicer));
 
     return mut.finish();
   }
@@ -101,36 +101,23 @@ class Changeset extends ComponentList {
     sort();
     otherCS.sort();
 
-    var mut = new ChangesetMutator(this);
+    var mut = new ChangesetComposer(this);
     otherCS.forEach((OpComponent op) {
       var slicer = op.slicer;
 
-      _invokeMutation(mut, slicer);
+      mut.apply(slicer);
 
-      if (mut.eof) {
+      if (mut.eof && slicer.isNotEmpty) {
         mut.insert(slicer);
       }
     });
+
 
     var newCs = mut.finish();
     if(newCs._newLen != otherCS._newLen) {
       throw new Exception('new changeset length (${newCs._newLen}) does not match expected length (${otherCS._newLen})');
     }
     return newCs;
-  }
-
-  _invokeMutation(_ChangesetMutatorBase mut, OpComponentSlicer slicer) {
-    var op = slicer.current;
-
-    while (!mut.eof && slicer.isNotEmpty) {
-      if (op.isInsert) {
-        mut.insert(slicer);
-      } else if (op.isRemove) {
-        mut.remove(slicer);
-      } else {
-        mut.format(slicer);
-      }
-    }
   }
 
     /*
@@ -141,40 +128,21 @@ class Changeset extends ComponentList {
     return new Changeset(super.inverted, _newLen, author: _author, newLen: _oldLen);
   }
 
-  /**
-   * Apply changeset to the document, modifying it in-place.
-   */
   void applyTo(ADocument doc) {
-    var mut = doc.mutate();
     sort();
+
+    var mut = new DocumentComposer(doc);
     forEach((OpComponent op) {
-      // if we reuse (don't pack) changeset object, we can end up with
-      // empty operations sometimes, do not process them to save time
-      if(op.chars > 0) {
-        if(op.isInsert) {
-          mut.insert(op);
-        } else if (op.isRemove) {
-          // Since we can have multiline remove ops, remove() can
-          // return an array of components instead of single one.
-          // But since they all should be mergeable, we can run a quick
-          // reduce operation and compare the result
-          var removed = mut.remove(op.chars, op.lines)
-                          .fold(new OpComponent.empty(), (prev, op) {
-                            return prev.append(op);
-                          });
-    
-          if(!removed.equalsButOpcode(op)) {
-            throw new Exception('actual does not match removed');
-          }
-        } else if (op.isSkip) {
-          mut.skip(op.chars, op.lines);
-        } else if (op.isFormat) {
-          mut.applyFormat(op);
-        }
+      var slicer = op.slicer;
+      mut.apply(slicer);
+
+      if (mut.eof && slicer.isNotEmpty) {
+        mut.insert(slicer);
       }
     });
+
     mut.finish();
-  
+
     if(_newLen != doc.getLength()) {
       throw new Exception('final document length does not match, expected $_newLen, got ${doc.getLength()}');
     }

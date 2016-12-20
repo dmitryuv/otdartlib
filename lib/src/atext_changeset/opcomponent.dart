@@ -183,4 +183,8 @@ class OpComponentSlicer {
     }
     return next(_op.chars, 0);
   }
+
+  reset() {
+    _op = new OpComponent.empty();
+  }
 }

@@ -4,6 +4,7 @@ import 'package:quiver/core.dart';
 import 'package:collection/wrappers.dart';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:collection';
 
 part 'src/atext_changeset/utils/util.dart';
 part 'src/atext_changeset/utils/dirtylist.dart';
