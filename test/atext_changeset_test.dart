@@ -7,8 +7,6 @@ import '../lib/atext_changeset.dart';
 part 'atext_changeset/attributelist-test.dart';
 part 'atext_changeset/opcomponent-test.dart';
 part 'atext_changeset/componentlist-test.dart';
-part 'atext_changeset/astringmutator-test.dart';
-part 'atext_changeset/alinesmutator-test.dart';
 part 'atext_changeset/builder-test.dart';
 part 'atext_changeset/changeset-test.dart';
 part 'atext_changeset/position-test.dart';
@@ -18,8 +16,6 @@ void main() {
   position_test();
   opComponent_test();
   componentList_test();
-  astringMutator_test();
-  alinesMutator_test();
   builder_test();
   changeset_test();
 }

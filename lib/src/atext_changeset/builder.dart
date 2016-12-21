@@ -10,7 +10,7 @@ class Builder {
   ADocument _doc;
   int _len;
   String _author;
-  ALinesMutator _mut;
+  DocumentComposer _mut;
   ComponentList _ops = new ComponentList();
   AttributeList _authorAtts;
 
@@ -29,7 +29,7 @@ class Builder {
   void keep(int N, int L) {
     _ops.addKeep(N, L);
     // mutator does the check that N and L match actual skipped chars
-    _mut.skip(N, L);
+    _mut.apply(_ops.last);
   }
 
   void format(int N, int L, AttributeList attribs) => _format(N, L, attribs);
@@ -40,7 +40,7 @@ class Builder {
     // someone could send us author by mistake, we strictly prohibit that and replace with our author
     attribs = attribs.merge(_authorAtts);
 
-    _mut.take(N, L).forEach((c) {
+    _mut.takeChars(N, L).forEach((c) {
       c = new OpComponent.createFormat(c.chars, c.lines, c.attribs);
       if(removeAll) {
         c = c.invertAttributes()
@@ -70,7 +70,7 @@ class Builder {
     }
   }
   
-  void remove(int N, int L) => _ops.addAll(_mut.take(N, L).inverted);
+  void remove(int N, int L) => _ops.addAll(_mut.takeChars(N, L).inverted);
 
   Changeset finish() => new Changeset(_ops, _len, author: _author);
 }

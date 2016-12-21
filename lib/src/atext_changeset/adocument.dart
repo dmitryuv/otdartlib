@@ -22,7 +22,7 @@ class ADocument extends DelegatingList<Map> implements Clonable {
     this.pool = pool ?? [],
     super(lines);
   
-  ALinesMutator mutate() => new ALinesMutator(this, pool);
+  DocumentComposer mutate() => new DocumentComposer(this);
 
   int getLength() => fold(0, (prev, line) => prev + AString.packedLength(line));
 

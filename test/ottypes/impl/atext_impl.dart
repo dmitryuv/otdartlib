@@ -28,8 +28,6 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
   
   @override
   List generateRandomOp(ADocument doc) {
-    var expected = doc.clone();
-  
     var len = doc.getLength();
     var pos = 0;
     var author = randomAuthor();
@@ -37,30 +35,19 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
     var cs = Changeset.create(doc, author: author);
     // since I don't have peek() function, i'll need another copy to iterate over by taking parts
     var iter = doc.mutate();
-    var mut = expected.mutate();
+    var mut = doc.mutate();
   
     ComponentList randomTextRange() {
       var n = randomInt(len - pos + 1);
-      var list = new ComponentList();
-  
-      while(n > 0) {
-        var lr = iter.lineRemaining;
-        if(lr > n) {
-          list.addAll(iter.take(n, 0));
-          n = 0;
-        } else {
-          list.addAll(iter.take(lr, 1));
-          n -= lr;
-        }
-      }
-      return list;
+      return iter.takeChars(n);
+
     }
   
     keep() {
       randomTextRange().forEach((op) { 
         // console.log('keep ', op);
         cs.keep(op.chars, op.lines);
-        mut.skip(op.chars, op.lines);
+        mut.apply(new OpComponent.createKeep(op.chars, op.lines));
         pos += op.chars;
       });
     };
@@ -76,7 +63,7 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
           cs.format(op.chars, op.lines, fmt);
           targetAtts = op.attribs.format(fmt.merge(authorAtt));
         }
-        mut.applyFormat(new OpComponent.createFormat(op.chars, op.lines, targetAtts));
+        mut.apply(new OpComponent.createFormat(op.chars, op.lines, targetAtts));
         pos += op.chars;
       });
     }
@@ -93,7 +80,7 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
       cs.insert(w, fmt);
   
       var cmp = new OpComponent(OpComponent.INSERT, w.length, newLine, fmt.merge(authorAtt), w);
-      mut.insert(cmp);
+      mut.apply(cmp);
       len += w.length;
       pos += w.length;
     }
@@ -102,7 +89,8 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
       randomTextRange().forEach((op) {
         // console.log('remove ', op);
         cs.remove(op.chars, op.lines);
-        mut.remove(op.chars, op.lines);
+        // remove by taking
+        mut.takeChars(op.chars, op.lines);
         len -= op.chars;
       });
     }
@@ -132,9 +120,8 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
       }
       operations--;
     }
-    mut.finish();
-  
-    return [cs.finish(), expected];
+
+    return [cs.finish(), mut.finish()];
   }
   
   ADocument generateRandomDoc() => new ADocument.fromText(randomWord());

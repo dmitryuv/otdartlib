@@ -27,8 +27,7 @@ class OT_atext extends OTTypeFactory<ADocument, Changeset> {
   
   @override
   ADocument apply(ADocument doc, Changeset op) {
-    op.applyTo(doc);
-    return doc;
+    return op.applyTo(doc);
   }
 
   @override

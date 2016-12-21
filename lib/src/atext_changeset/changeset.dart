@@ -85,9 +85,7 @@ class Changeset extends ComponentList {
     otherCS.sort();
 
     var mut = new ChangesetTransformer(this, side, otherCS._newLen);
-
-    otherCS.forEach((OpComponent op) => mut.apply(op.slicer));
-
+    otherCS.forEach(mut.apply);
     return mut.finish();
   }
 
@@ -102,18 +100,9 @@ class Changeset extends ComponentList {
     otherCS.sort();
 
     var mut = new ChangesetComposer(this);
-    otherCS.forEach((OpComponent op) {
-      var slicer = op.slicer;
-
-      mut.apply(slicer);
-
-      if (mut.eof && slicer.isNotEmpty) {
-        mut.insert(slicer);
-      }
-    });
-
-
+    otherCS.forEach(mut.apply);
     var newCs = mut.finish();
+
     if(newCs._newLen != otherCS._newLen) {
       throw new Exception('new changeset length (${newCs._newLen}) does not match expected length (${otherCS._newLen})');
     }
@@ -128,24 +117,20 @@ class Changeset extends ComponentList {
     return new Changeset(super.inverted, _newLen, author: _author, newLen: _oldLen);
   }
 
-  void applyTo(ADocument doc) {
+  ADocument applyTo(ADocument doc) {
+    if(_oldLen != doc.getLength()) {
+      throw new Exception('Trying to apply to a wrong document version, expected start length $_oldLen, got ${doc.getLength()}');
+    }
     sort();
 
-    var mut = new DocumentComposer(doc);
-    forEach((OpComponent op) {
-      var slicer = op.slicer;
-      mut.apply(slicer);
+    var mut = doc.mutate();
+    forEach(mut.apply);
+    var newDoc = mut.finish();
 
-      if (mut.eof && slicer.isNotEmpty) {
-        mut.insert(slicer);
-      }
-    });
-
-    mut.finish();
-
-    if(_newLen != doc.getLength()) {
-      throw new Exception('final document length does not match, expected $_newLen, got ${doc.getLength()}');
+    if(_newLen != newDoc.getLength()) {
+      throw new Exception('Final document length does not match, expected $_newLen, got ${newDoc.getLength()}');
     }
+    return newDoc;
   }
 
   /**

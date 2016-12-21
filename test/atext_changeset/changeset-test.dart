@@ -21,10 +21,10 @@ void changeset_test() {
         test(name, () {
           var doc = getDoc(lines);
           if(err != null) {
-            expect(() => new Changeset.unpack(cs)..applyTo(doc), throwsA(errMatcher(err)));
+            expect(() => new Changeset.unpack(cs).applyTo(doc), throwsA(errMatcher(err)));
           }
           else {
-            new Changeset.unpack(cs)..applyTo(doc);
+            doc = new Changeset.unpack(cs).applyTo(doc);
             expect(doc.pack()['lines'], expected);
           }
         });
@@ -83,15 +83,14 @@ void changeset_test() {
   
     group('invert', () {
       test('can invert complex mutation', () {
-        var newDoc = getDoc();
-        var cs = new Changeset.unpack({'op': 'X:a>1=1^3*0=1*0|1=2*1=4*2|1-2*1|1+3\$h\nij\n', 'p': [['italic', true], ['author', 'y'], ['bold', true], ['author', 'x']], 'u': 'y'})
-          ..applyTo(newDoc);
+        var cs = new Changeset.unpack({'op': 'X:a>1=1^3*0=1*0|1=2*1=4*2|1-2*1|1+3\$h\nij\n', 'p': [['italic', true], ['author', 'y'], ['bold', true], ['author', 'x']], 'u': 'y'});
+        var newDoc = cs.applyTo(getDoc());
         
         var inv = cs.invert();
   
         expect(inv.pack(), equals({ 'op': 'X:b<1=1^0*1=1^0|1=2^2=4*2|1-3*3|1+2\$ij\nh\n',  'p': [['italic', true], ['author', 'x'], ['author', 'y'], ['bold', true]], 'u': 'y' }));
   
-        inv.applyTo(newDoc);
+        newDoc = inv.applyTo(newDoc);
         expect(newDoc.pack(), equals(getDoc().pack()));
       });
     });
