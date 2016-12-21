@@ -79,6 +79,16 @@ void changeset_test() {
         null,
         [{'a': '*0+3', 's': 'abc'}]
       );
+
+      apply('remove newline at the end merges lines',
+        {'op': 'X:a<1=3|1-1\$\n', 'p': []},
+        [{'a': '*0+2+5*1|1+2', 's': 'abcdefgh\n'} ]
+      );
+
+      apply('removing entire line',
+        {'op': 'X:a<4*0-2|1-2\$abc\n', 'p': [['author', 'x']]},
+        [{ 'a': '+4*1|1+2', 's': 'defgh\n'}]
+      );
     });
   
     group('invert', () {

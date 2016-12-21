@@ -1,7 +1,9 @@
 part of otdartlib.atext_changeset;
 
-abstract class OperationComposer {
+abstract class OperationComposer<T> {
   apply(OpComponent op);
+
+  T finish();
 }
 
 abstract class _MutatorBase {
@@ -41,7 +43,7 @@ abstract class _MutatorBase {
       res = _slicedOp.next(chars, lines);
     }
 
-    return res;
+    return res.isEmpty && !eof ? _take(chars, lines) : res;
   }
 
   _add(OpComponent op) => _out.add(op);
@@ -93,7 +95,6 @@ class _ChangesetComposerBase extends _MutatorBase {
   @override
   _remove(OpComponentSlicer slicer) {
     var op = _take(slicer.current.chars, slicer.current.lines);
-    if(op.isEmpty) return;
 
     if(op.isRemove) {
       // keep original removes, they can't be affected
@@ -113,7 +114,6 @@ class _ChangesetComposerBase extends _MutatorBase {
   @override
   _format(OpComponentSlicer slicer) {
     var op = _take(slicer.current.chars, slicer.current.lines);
-    if(op.isEmpty) return;
 
     if(!op.isRemove) {
       // KEEPs and INSERTs can be reformatted
@@ -125,7 +125,7 @@ class _ChangesetComposerBase extends _MutatorBase {
     }
   }
 
-  // for composition, operation can have leftovers that should be inserted
+  // for composition, operation can have leftovers in case target oplist finished, that should be inserted
   @override
   apply(OpComponent op) {
     var slicer = op.slicer;

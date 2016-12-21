@@ -1,6 +1,6 @@
 part of otdartlib.atext_changeset;
 
-class ChangesetComposer extends _ChangesetComposerBase implements OperationComposer {
+class ChangesetComposer extends _ChangesetComposerBase implements OperationComposer<Changeset> {
   Changeset _cs;
 
   ChangesetComposer(this._cs) : super(_cs.iterator, OpComponent.REMOVE);

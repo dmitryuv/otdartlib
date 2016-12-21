@@ -5,9 +5,9 @@ void opComponent_test() {
 
   group('OpComponent', () {
     test('test constructor', () {
-      expect(new OpComponent.createKeep(0, 0).opcode, equals('='));
-      expect(new OpComponent.createInsert(0, 0, new AttributeList(), '').opcode, equals('+'));
-      expect(new OpComponent.createRemove(0, 0, new AttributeList(), '').opcode, equals('-'));
+      expect(new OpComponent.keep(0, 0).opcode, equals('='));
+      expect(new OpComponent.insert(0, 0, new AttributeList(), '').opcode, equals('+'));
+      expect(new OpComponent.remove(0, 0, new AttributeList(), '').opcode, equals('-'));
       expect(new OpComponent.empty().charBank, equals(''));
       expect(() => new OpComponent('+', 2, 1, new AttributeList(), '\na'), throwsA(errMatcher('should end up with newline')));
     });
@@ -66,7 +66,7 @@ void opComponent_test() {
       });
       test('throw if not compatible', () {
         expect(() {
-            var c2 = new OpComponent.createKeep(1, 0);
+            var c2 = new OpComponent.keep(1, 0);
             c.append(c2);
           }, throwsA(errMatcher('cannot append')));
         expect(() {

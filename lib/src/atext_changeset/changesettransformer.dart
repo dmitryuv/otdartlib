@@ -1,6 +1,6 @@
 part of otdartlib.atext_changeset;
 
-class ChangesetTransformer extends _MutatorBase implements OperationComposer {
+class ChangesetTransformer extends _MutatorBase implements OperationComposer<Changeset> {
   Changeset _cs;
   String _side;
   int _newLen;
@@ -22,7 +22,7 @@ class ChangesetTransformer extends _MutatorBase implements OperationComposer {
     }
     if(left) {
       // other op goes first
-      _add(new OpComponent.createKeep(op.chars, op.lines));
+      _add(new OpComponent.keep(op.chars, op.lines));
       slicer.next(op.chars, op.lines);
     } else {
       _add(_take(current.chars, current.lines));
@@ -44,7 +44,6 @@ class ChangesetTransformer extends _MutatorBase implements OperationComposer {
   @override
   _format(OpComponentSlicer slicer) {
     var op = _take(slicer.current.chars, slicer.current.lines);
-    if(op.isEmpty) return;
 
     if(!op.isInsert) {
       // KEEPs and REMOVEs can be reformatted

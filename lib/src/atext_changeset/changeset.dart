@@ -19,7 +19,7 @@ class Changeset extends ComponentList {
   
   Changeset(Iterable<OpComponent> ops, this._oldLen, { String author, int newLen }) : super.from(ops) {
     _author = author;
-    _newLen = newLen ?? (_oldLen + fold(0,  (prev, op) => prev + op.deltaLen));
+    _newLen = newLen ?? (_oldLen + deltaLen);
   }
 
   /**
@@ -81,12 +81,7 @@ class Changeset extends ComponentList {
     if(side != 'left' && side != 'right') {
       throw new Exception('side should be \'left\' or \'right\'');
     }
-    sort();
-    otherCS.sort();
-
-    var mut = new ChangesetTransformer(this, side, otherCS._newLen);
-    otherCS.forEach(mut.apply);
-    return mut.finish();
+    return _applyChangeset(otherCS, () => new ChangesetTransformer(this, side, otherCS._newLen));
   }
 
   /**
@@ -96,12 +91,8 @@ class Changeset extends ComponentList {
     if (_newLen != otherCS._oldLen) {
       throw new Exception('changesets from different document versions are not composable');
     }
-    sort();
-    otherCS.sort();
 
-    var mut = new ChangesetComposer(this);
-    otherCS.forEach(mut.apply);
-    var newCs = mut.finish();
+    var newCs = _applyChangeset(otherCS, () => new ChangesetComposer(this));
 
     if(newCs._newLen != otherCS._newLen) {
       throw new Exception('new changeset length (${newCs._newLen}) does not match expected length (${otherCS._newLen})');
@@ -109,28 +100,35 @@ class Changeset extends ComponentList {
     return newCs;
   }
 
-    /*
+  ADocument applyTo(ADocument doc) {
+    if(_oldLen != doc.getLength()) {
+      throw new Exception('Trying to apply to a wrong document version, expected start length $_oldLen, got ${doc.getLength()}');
+    }
+
+    var newDoc = _applyChangeset(this, () => doc.mutate());
+
+    if(_newLen != newDoc.getLength()) {
+      throw new Exception('Final document length do not match, expected $_newLen, got ${newDoc.getLength()}');
+    }
+    return newDoc;
+  }
+
+  T _applyChangeset<T>(Changeset otherCS, OperationComposer<T> createComposerFn()) {
+    sort();
+    otherCS.sort();
+    // delay creatign composer since sorts above may alter collections,
+    // and composer constructor creates iterator for the collection
+    var composer = createComposerFn();
+    otherCS.forEach(composer.apply);
+    return composer.finish();
+  }
+
+  /*
    * Invert current changeset. That is, inverted changeset if applied to the modified document will produce result
    * that is equal to document before the modification: apply(apply(doc, cs), invert(cs)) == doc
    */
   Changeset invert() {
     return new Changeset(super.inverted, _newLen, author: _author, newLen: _oldLen);
-  }
-
-  ADocument applyTo(ADocument doc) {
-    if(_oldLen != doc.getLength()) {
-      throw new Exception('Trying to apply to a wrong document version, expected start length $_oldLen, got ${doc.getLength()}');
-    }
-    sort();
-
-    var mut = doc.mutate();
-    forEach(mut.apply);
-    var newDoc = mut.finish();
-
-    if(_newLen != newDoc.getLength()) {
-      throw new Exception('Final document length does not match, expected $_newLen, got ${newDoc.getLength()}');
-    }
-    return newDoc;
   }
 
   /**

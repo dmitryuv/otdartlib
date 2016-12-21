@@ -1,6 +1,6 @@
 part of otdartlib.atext_changeset;
 
-class DocumentComposer extends _ChangesetComposerBase implements OperationComposer {
+class DocumentComposer extends _ChangesetComposerBase implements OperationComposer<ADocument> {
   Iterator<Map> _lines;
   List _pool;
   List<Map> _outLines = <Map>[];

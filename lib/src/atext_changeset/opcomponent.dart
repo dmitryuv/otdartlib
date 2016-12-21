@@ -18,24 +18,23 @@ class OpComponent {
 
 
   // TODO: rename for consistency with OpAttribute -> insert
-  OpComponent.createInsert(this.chars, this.lines, this.attribs, this.charBank) : opcode = INSERT {
+  OpComponent.insert(this.chars, this.lines, this.attribs, this.charBank) : opcode = INSERT {
     _validate();
   }
-  OpComponent.createRemove(this.chars, this.lines, this.attribs, this.charBank) : opcode = REMOVE {
+  OpComponent.remove(this.chars, this.lines, this.attribs, this.charBank) : opcode = REMOVE {
     _validate();
   }
-  OpComponent.createKeep(this.chars, this.lines) : opcode = KEEP, charBank = '', attribs = new AttributeList() {
+  OpComponent.keep(this.chars, this.lines) : opcode = KEEP, charBank = '', attribs = new AttributeList() {
     _validate();
   }
-  OpComponent.createFormat(this.chars, this.lines, this.attribs) : opcode = KEEP, charBank = '' {
+  OpComponent.format(this.chars, this.lines, this.attribs) : opcode = KEEP, charBank = '' {
     _validate();
   }
   OpComponent(this.opcode, this.chars, this.lines, this.attribs, this.charBank) {
     _validate();
   }
 
-  // TODO: potentially empty opcode is not a valid enum, we can use '=' opcode instead
-  OpComponent.empty() : opcode = '', chars = 0, lines = 0, attribs = new AttributeList(), charBank = '';
+  OpComponent.empty() : opcode = KEEP, chars = 0, lines = 0, attribs = new AttributeList(), charBank = '';
   
   void _validate() {
     if(opcode == null) throw new ArgumentError('opcode should be not null');
@@ -51,24 +50,24 @@ class OpComponent {
     }
   }
 
-  bool get isEmpty => opcode == '' || opcode == null || chars == 0; 
+  bool get isEmpty => chars == 0;
   bool get isNotEmpty => !isEmpty;
   bool get isInsert => opcode == INSERT;
   bool get isRemove => opcode == REMOVE;
   bool get isKeep => opcode == KEEP;
   // additional custom cases for KEEP
   bool get isSkip => isKeep && attribs.isEmpty;
-  bool get isFormat => !isSkip;
+  bool get isFormat => isKeep && attribs.isNotEmpty;
 
   OpComponentSlicer get slicer => new OpComponentSlicer(this);
   
   OpComponent invert() {
     if(isInsert) {
-      return new OpComponent.createRemove(chars, lines, attribs, charBank);
+      return new OpComponent.remove(chars, lines, attribs, charBank);
     } else if (isRemove) {
-      return new OpComponent.createInsert(chars, lines, attribs, charBank);
+      return new OpComponent.insert(chars, lines, attribs, charBank);
     } else {
-      return new OpComponent.createFormat(chars, lines, attribs.invert());
+      return new OpComponent.format(chars, lines, attribs.invert());
     }
   }
 

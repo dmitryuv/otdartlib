@@ -26,22 +26,23 @@ class Builder {
     }
   }
 
-  void keep(int N, int L) {
-    _ops.addKeep(N, L);
+  void keep(int chars, int lines) {
+    var op = new OpComponent.keep(chars, lines);
+    _ops.add(op);
     // mutator does the check that N and L match actual skipped chars
-    _mut.apply(_ops.last);
+    _mut.apply(op);
   }
 
-  void format(int N, int L, AttributeList attribs) => _format(N, L, attribs);
+  void format(int chars, int lines, AttributeList attribs) => _format(chars, lines, attribs);
 
-  void removeAllFormat(int N, int L) => _format(N, L, new AttributeList(), true);
+  void removeAllFormat(int chars, int lines) => _format(chars, lines, new AttributeList(), true);
   
-  void _format(int N, int L, AttributeList attribs, [bool removeAll = false]) {
+  void _format(int chars, int lines, AttributeList attribs, [bool removeAll = false]) {
     // someone could send us author by mistake, we strictly prohibit that and replace with our author
     attribs = attribs.merge(_authorAtts);
 
-    _mut.takeChars(N, L).forEach((c) {
-      c = new OpComponent.createFormat(c.chars, c.lines, c.attribs);
+    _mut.takeChars(chars, lines).forEach((c) {
+      c = new OpComponent.format(c.chars, c.lines, c.attribs);
       if(removeAll) {
         c = c.invertAttributes()
               .composeAttributes(attribs);
@@ -54,23 +55,23 @@ class Builder {
   
   void insert(String text, [AttributeList attribs]) {
     attribs = attribs?.merge(_authorAtts) ?? _authorAtts;
-  
+
     var lastNewline = text.lastIndexOf('\n');
     if(lastNewline < 0) {
       // single line text
-      _ops.addInsert(text.length, 0, attribs, text);
+      _ops.add(new OpComponent.insert(text.length, 0, attribs, text));
     } else {
       var l = lastNewline + 1;
       // multiline text, insert everything before last newline as multiline op
-      _ops.addInsert(l, '\n'.allMatches(text).length, attribs, text.substring(0, l));
+      _ops.add(new OpComponent.insert(l, '\n'.allMatches(text).length, attribs, text.substring(0, l)));
       if(l < text.length) {
         // insert remainder as single-line op
-        _ops.addInsert(text.length - l, 0, attribs, text.substring(l));
+        _ops.add(new OpComponent.insert(text.length - l, 0, attribs, text.substring(l)));
       }
     }
   }
   
-  void remove(int N, int L) => _ops.addAll(_mut.takeChars(N, L).inverted);
+  void remove(int chars, int lines) => _ops.addAll(_mut.takeChars(chars, lines).inverted);
 
   Changeset finish() => new Changeset(_ops, _len, author: _author);
 }

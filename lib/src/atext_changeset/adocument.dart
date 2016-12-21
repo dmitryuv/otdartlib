@@ -1,6 +1,6 @@
 part of otdartlib.atext_changeset;
 
-class ADocument extends DelegatingList<Map> implements Clonable {
+class ADocument extends UnmodifiableListView<Map> implements Clonable {
   final List pool;
   
   ADocument() : this._([]);
@@ -10,10 +10,9 @@ class ADocument extends DelegatingList<Map> implements Clonable {
   factory ADocument.fromText(String text, {String author}) {
     var doc = new ADocument();
     if(text != null && text.isNotEmpty) {
-      Changeset.create(doc, author: author)
-        ..insert(text)
-        ..finish()
-        .applyTo(doc);
+      var builder = Changeset.create(doc, author: author)
+                      ..insert(text);
+      return builder.finish().applyTo(doc);
     }
     return doc;
   }
@@ -42,12 +41,12 @@ class ADocument extends DelegatingList<Map> implements Clonable {
    * @returns {ADocument} - new compacted document object
    */
   ADocument compact() {
-    var doc = new ADocument();
-    
-    doc.addAll(map((l) => 
-        new ComponentList.unpack(new AString.unpack(l), pool).pack(doc.pool)));
+    var newPool = [];
+    var lines = map((l) => new ComponentList.unpack(new AString.unpack(l), pool)
+                                                        .pack(newPool))
+                                            .toList(growable: false);
 
-    return doc;
+    return new ADocument._(lines, newPool);
   }
 
 /*
@@ -61,9 +60,6 @@ class ADocument extends DelegatingList<Map> implements Clonable {
       doc = doc.compact();
     }
 
-    var lines = new List.from(doc);    
-    var pool = lines.isEmpty ? [] : new List.from(doc.pool);
-    
-    return { 'lines': lines, 'pool': pool };
+    return { 'lines': new List.from(doc, growable: false), 'pool': doc.pool };
   }
 }

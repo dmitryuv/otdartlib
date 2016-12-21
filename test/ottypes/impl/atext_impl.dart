@@ -45,9 +45,8 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
   
     keep() {
       randomTextRange().forEach((op) { 
-        // console.log('keep ', op);
         cs.keep(op.chars, op.lines);
-        mut.apply(new OpComponent.createKeep(op.chars, op.lines));
+        mut.apply(new OpComponent.keep(op.chars, op.lines));
         pos += op.chars;
       });
     };
@@ -63,14 +62,13 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
           cs.format(op.chars, op.lines, fmt);
           targetAtts = op.attribs.format(fmt.merge(authorAtt));
         }
-        mut.apply(new OpComponent.createFormat(op.chars, op.lines, targetAtts));
+        mut.apply(new OpComponent.format(op.chars, op.lines, targetAtts));
         pos += op.chars;
       });
     }
   
     insert() {
       var w = randomWord();
-      // console.log('inserting ', w);
       var newLine = 0;
       var fmt = randomFormat();
       if(randomInt(10) > 6) {
@@ -87,7 +85,6 @@ class FuzzerATextImpl extends FuzzerImpl<ADocument> {
   
     remove() {
       randomTextRange().forEach((op) {
-        // console.log('remove ', op);
         cs.remove(op.chars, op.lines);
         // remove by taking
         mut.takeChars(op.chars, op.lines);

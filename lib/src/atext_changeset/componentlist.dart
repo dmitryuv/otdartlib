@@ -41,15 +41,6 @@ class ComponentList extends DirtyList<OpComponent>{
     _dirty = false; // just unpacked, no need to be dirty
   }
 
-  @override
-  BackBufferIterator<OpComponent> get iterator => new BackBufferIterator<OpComponent>._internal(super.iterator);
-
-  void addKeep(int N, int L) => add(new OpComponent.createKeep(N, L));
-
-  void addInsert(int N, int L, AttributeList alist, String charBank) => add(new OpComponent.createInsert(N, L, alist, charBank));
-
-  void addRemove(int N, int L, AttributeList alist, String charBank) => add(new OpComponent.createRemove(N, L, alist, charBank));
-
   Iterable<OpComponent> get inverted => map((op) => op.invert());
 
   int get deltaLen => this.fold(0, (prev, next) => prev + next.deltaLen);
@@ -117,19 +108,16 @@ class ComponentList extends DirtyList<OpComponent>{
   AString toAString([List pool]) {
     pool ??= [];
 
-    var res = new AString(pool: pool);
+    String resAtts = '';
+    String resText = '';
+    int dLen = 0;
     var last = new OpComponent.empty();
     var inner = new OpComponent.empty();
 
-    push(AString res, AString packed, [clear = false]) {
-      res.atts += packed.atts;
-      res.text += packed.text;
-      res.dLen += packed.dLen;
-      if(clear) {
-        packed.atts = '';
-        packed.text = '';
-        packed.dLen = 0;
-      }
+    push(AString packed) {
+      resAtts += packed.atts;
+      resText += packed.text;
+      dLen += packed.dLen;
     }
 
     flush([finalize = false]) {
@@ -137,10 +125,10 @@ class ComponentList extends DirtyList<OpComponent>{
         if(finalize && last.isKeep && last.attribs.isEmpty) {
           // final keep, drop
         } else {
-          push(res, last.pack(pool));
+          push(last.pack(pool));
           last = new OpComponent.empty();
           if(inner.isNotEmpty) {
-            push(res, inner.pack(pool));
+            push(inner.pack(pool));
             inner = new OpComponent.empty();
           }
         }
@@ -169,34 +157,8 @@ class ComponentList extends DirtyList<OpComponent>{
     forEach(append);
     flush(true);
 
-    return res;
+    return new AString(atts: resAtts, text: resText, dLen: dLen, pool: pool);
   }
   
   Map pack([List pool]) => toAString(pool).pack();
-}
-
-class BackBufferIterator<T> extends Iterator<T> {
-  Iterator<T> _iter;
-  List<T> _backlist = [];
-  T _current;
-
-  BackBufferIterator._internal(Iterator<T> iterator) {
-    _iter = iterator;
-  }
-
-  bool moveNext() {
-    if(_backlist.isNotEmpty) {
-      _current = _backlist.removeLast();
-    } else if(_iter.moveNext()) {
-      _current = _iter.current;
-    } else {
-      _current = null;
-      return false;
-    }
-    return true;
-  }
-
-  T get current => _current;
-
-  void pushBack(T op) => _backlist.add(op);
 }
