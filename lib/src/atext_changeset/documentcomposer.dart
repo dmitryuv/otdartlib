@@ -86,6 +86,7 @@ class DocumentComposer extends _ChangesetComposerBase implements OperationCompos
     }
   }
 
+  // method takes and returns a collection of operations for requested range of chars
   // provide number of lines for additional document validation
   ComponentList takeChars(int chars, [int lines = null]) {
     var list = new ComponentList();

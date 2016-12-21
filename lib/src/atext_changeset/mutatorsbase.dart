@@ -89,7 +89,8 @@ class _ChangesetComposerBase extends _MutatorBase {
 
   @override
   _insert(OpComponentSlicer slicer) {
-    _add(slicer.next(slicer.current.chars, slicer.current.lines));
+    _add(slicer.current);
+    slicer.reset();
   }
 
   @override
