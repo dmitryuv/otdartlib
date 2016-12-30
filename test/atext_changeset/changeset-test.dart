@@ -15,6 +15,13 @@ void changeset_test() {
     getDoc([lines]) {
       return new ADocument.unpack(clone({ 'lines': lines ?? sampleLines, 'pool': samplePool}));
     }
+
+    group('constructor', () {
+      test('identity', () {
+        var cs = new Changeset.identity(5);
+        expect(cs.pack(), { 'op': 'X:5>0', 'p': [] });
+      });
+    });
   
     group('applyTo', () {
       apply(name, cs, expected, [err, lines]) {

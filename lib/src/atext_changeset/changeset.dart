@@ -13,35 +13,39 @@ class Changeset extends ComponentList {
   int _oldLen;
   int _newLen;
   String _author;
-  
+
   static final _headerRegex = new RegExp(r'X:([0-9a-z]+)([><])([0-9a-z]+)|/');
-  
-  
+
+
   Changeset(Iterable<OpComponent> ops, this._oldLen, { String author, int newLen }) : super.from(ops) {
     _author = author;
     _newLen = newLen ?? (_oldLen + deltaLen);
   }
+
+  Changeset.identity(this._oldLen)
+    : _newLen = _oldLen,
+      super.from([]);
 
   /**
    * Unpacks operation from storage object format and returns Changeset object.
    */
   Changeset.unpack(Map cs) {
     String op = cs['op'];
-    
+
     var header = _headerRegex.matchAsPrefix(op);
     if(header == null) {
       throw new Exception('wrong changeset');
     }
-  
+
     _oldLen = _util.parseInt36(header[1]);
     var sign = (header[2] == '>') ? 1 : -1;
     var delta = _util.parseInt36(header[3]);
     _newLen = _oldLen + sign * delta;
-  
+
     var splitPos = op.indexOf(r'$');
     var charBank = splitPos < 0 ? '' : op.substring(splitPos + 1);
     var astr = new AString(atts: op.substring(header[0].length, splitPos < 0 ? null : splitPos), text: charBank);
-    
+
     super._unpack(astr, cs['p']);
     _author = cs['u'];
 
@@ -50,13 +54,13 @@ class Changeset extends ComponentList {
       throw new Exception('changeset delta ($delta) does not match operations delta ($calculatedDelta)');
     }
   }
-  
+
   /**
    * Create and return changeset builder
    */
   static Builder create(ADocument doc, { String author }) => new Builder(doc, author: author);
 
-  
+
   // explanation for side = [left | right]
   // let's say we have thisOp coming to server after otherOp,
   // both creating a "tie" situation.
@@ -64,7 +68,7 @@ class Changeset extends ComponentList {
   // for server otherOp is already written, so it transforms thisOp
   // by otherOp, taking otherOp as first-win and thisOp as second.
   // In [otherOp, thisOp] list otherOp is on the "left"
-  // 
+  //
   // Server sends its otherOp back to the client, but client already
   // applied thisOp operation, so his queue looks like
   // [thisOp, otherOp]
@@ -132,7 +136,7 @@ class Changeset extends ComponentList {
   }
 
   /**
-   * Pack changeset into compact format that can be stored or transferred by network. 
+   * Pack changeset into compact format that can be stored or transferred by network.
    */
   Map pack([List pool]) {
     pool ??= [];
@@ -144,11 +148,11 @@ class Changeset extends ComponentList {
     if((_newLen - _oldLen) != packed.dLen) {
       throw new Exception('something wrong with the changeset, internal state broken');
     }
-  
+
     if(packed.text.isNotEmpty) {
       op += r'$' + packed.text;
     }
-  
+
     var cs = { 'op': op, 'p': pool };
     if(_author != null) {
       cs['u'] = _author;

@@ -24,6 +24,12 @@ class ADocument extends UnmodifiableListView<Map> implements Clonable {
   DocumentComposer mutate() => new DocumentComposer(this);
 
   int getLength() => fold(0, (prev, line) => prev + AString.packedLength(line));
+  // returns number of newlines (\n) which may be either lines.length or lines.length-1 depending
+  // on if last line was finished
+  int getNewLines() {
+    bool lastLineFinished = new AString.unpack(this.last).text.endsWith('\n');
+    return this.length - (lastLineFinished ? 0 : 1);
+  }
 
   /**
    * Creates a full copy of the document.
