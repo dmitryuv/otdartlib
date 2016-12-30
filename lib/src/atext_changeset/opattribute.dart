@@ -17,6 +17,9 @@ class OpAttribute {
   OpAttribute invert() => opcode == FORMAT ? new OpAttribute.remove(key, value) : new OpAttribute.format(key, value); 
   
   int get hashCode => hash3(opcode, key, value);
+
+  bool get isFormat => opcode == FORMAT;
+  bool get isRemove => opcode == REMOVE;
   
   bool operator==(other) => other is OpAttribute && opcode == other.opcode && key == other.key && value == other.value;
 }

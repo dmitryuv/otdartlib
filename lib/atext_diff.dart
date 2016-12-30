@@ -3,12 +3,12 @@ library otdartlib.atext_diff;
 import 'package:otdartlib/atext_changeset.dart';
 import 'dart:convert';
 
-class DocumentDiff {
+class ADocumentDiff {
   ADocument _doc;
   List<Changeset> _changes;
   int _docChars;
 
-  DocumentDiff(this._doc, this._changes) {
+  ADocumentDiff(this._doc, this._changes) {
     _docChars = _doc.getLength();
   }
 
@@ -22,12 +22,12 @@ class DocumentDiff {
         return new OpComponent.keep(opc.chars, opc.lines);
       }
     });
-    var res = new Changeset(ops, _docChars).applyTo(doc).compact();
+    var res = new Changeset(ops, _docChars).applyTo(doc);
 //    print('doc: $res\npool: ${res.pool}');
     return res;
   }
 
-  OpAttribute _getAuthor(OpComponent op) => op.attribs.firstWhere((a) => a.key == 'author', orElse: null);
+  OpAttribute _getAuthor(OpComponent op) => op.attribs.find('author');
 
   ADocument createDiff() {
     // TODO: remap changes to inject change author into removal ops
@@ -80,7 +80,7 @@ void main() {
                 '5>1=5*1+1\$l', '6<1*0-1\$H',
                 '5>1=5*1+1\$d'];
 
-  var diff = new DocumentDiff(getDoc(), getChanges(edits));
+  var diff = new ADocumentDiff(getDoc(), getChanges(edits));
   var res = diff.createDiff().compact();
   print('doc: $res\npool: ${res.pool}');
 }

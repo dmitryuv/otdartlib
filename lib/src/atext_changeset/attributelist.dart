@@ -5,7 +5,7 @@ part of otdartlib.atext_changeset;
  * AttributeList is immutable collection because it gets copied a lot
  * together with OpComponent. 
  */
-class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonable {
+class AttributeList extends UnmodifiableListView<OpAttribute> {
   static final _attRegex = new RegExp(r'([\*\^])([0-9a-z]+)');
   
   AttributeList() : super(const []);
@@ -61,14 +61,10 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
 
     return this.length == otherAtts.length && this.every(otherAtts.contains);
   }
-  
-  /**
-   * Create a copy of the attribute list. Note that once created, attribute list is immutable
-   * (together with OpAttribute objects), so for speed reasons we can just duplicate 
-   * a reference and not values itself.
-   */
-  @override
-  AttributeList clone() => this;
+
+  OpAttribute find(String key) => firstWhere((a) => a.key == key, orElse: null);
+
+  bool hasKey(String key) => find(key) != null;
 
   /**
    * Merge method adds otherAttributes to the current attributes list.
@@ -139,7 +135,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
         }
       }
       if(!found) {
-        if(!isComposition && otherOp.opcode == OpAttribute.REMOVE) {
+        if(!isComposition && otherOp.isRemove) {
           throw new Exception('trying to remove non-existing attribute: ${otherOp.opcode}${otherOp.key} from ${list.fold('', (p, n) => p + n.opcode + n.key)}');
         }
         list.add(otherOp);
@@ -173,7 +169,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
         if(thisOp == otherOp) {
           // someone already applied this operation, skip it
           skip = true;
-        } else if(thisOp.key == otherOp.key && thisOp.opcode == otherOp.opcode && thisOp.opcode == OpAttribute.FORMAT) {
+        } else if(thisOp.key == otherOp.key && thisOp.opcode == otherOp.opcode && thisOp.isFormat) {
           // we have format operation for the same attribute key but different value
           if(thisOp.value.compareTo(otherOp.value) < 0) {
             // we need to keep out value, for this, remove other one
@@ -182,7 +178,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
           }
           skip = true;
         } else if((thisOp.key == otherOp.key && thisOp.value == otherOp.value && thisOp.opcode != otherOp.opcode)
-                  || (thisOp.key == otherOp.key && thisOp.value != otherOp.value && thisOp.opcode == OpAttribute.REMOVE)) {
+                  || (thisOp.key == otherOp.key && thisOp.value != otherOp.value && thisOp.isRemove)) {
           // some sanity checks:
           // 1) can't do opposite operation on N
           // 2) can't remove key with different value
@@ -214,11 +210,11 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
 
         if(formatOp.key == thisOp.key && formatOp.value == thisOp.value) {
           // for key & value match, keep removals and ignore insertions
-          if(formatOp.opcode == OpAttribute.REMOVE) {
+          if(formatOp.isRemove) {
             res.add(formatOp);
           }
           skip = true;
-        } else if(formatOp.key == thisOp.key && formatOp.value != thisOp.value && formatOp.opcode == OpAttribute.FORMAT) {
+        } else if(formatOp.key == thisOp.key && formatOp.value != thisOp.value && formatOp.isFormat) {
           // have same insert operation on the same key but different values
           // need to remove old value and only then push new one
           res..add(new OpAttribute.remove(thisOp.key, thisOp.value))
@@ -226,7 +222,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
           skip = true;
         }
       }
-      if(!skip && formatOp.opcode == OpAttribute.FORMAT) {
+      if(!skip && formatOp.isFormat) {
         // drop removals of non-existing key+value pair and keep only formats
         res.add(formatOp);
       }
@@ -276,7 +272,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> implements Clonabl
         // or 2 images with different values
         int cnt = kMap[item.op.key] ?? 0;
         
-        cnt = kMap[item.op.key] = cnt + (item.op.opcode == OpAttribute.FORMAT ? 1 : -1);
+        cnt = kMap[item.op.key] = cnt + (item.op.isFormat ? 1 : -1);
         if(cnt < -1 || cnt > 1) {
           throw new Exception('multiple insertions or deletions of attribute with key: ${item.op.key}');
         }

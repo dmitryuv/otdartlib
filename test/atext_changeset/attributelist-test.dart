@@ -22,11 +22,6 @@ void attributeList_test() {
       expect(new AttributeList.from(list), isNot(equals(new AttributeList.from(list.sublist(1)))));
     });
   
-    test('clone', () {
-      var copy = new AttributeList.from([new OpAttribute.format('foo', 'bar')]).clone();
-      expect(copy, equals(new AttributeList.from([new OpAttribute.format('foo', 'bar')])));
-    });
-  
     group('pack', () {
       var pool = [['foo','true'], ['bar','false'], ['foo', '1']];
             
