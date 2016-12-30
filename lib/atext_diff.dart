@@ -13,16 +13,16 @@ class DocumentDiff {
   }
 
   ADocument _removeAuthorship(ADocument doc) {
-    var builder = new Builder(doc);
-
-    doc.mutate().takeChars(_docChars).forEach((opc) {
+    var ops = doc.mutate().takeChars(_docChars).map((opc) {
       var author = _getAuthor(opc);
       if(author != null) {
         var removeAtt = new AttributeList.fromMap(remove: {'author': author.value});
-        builder.format(opc.chars, opc.lines, removeAtt);
+        return new OpComponent.format(opc.chars, opc.lines, opc.attribs.format(removeAtt));
+      } else {
+        return new OpComponent.keep(opc.chars, opc.lines);
       }
     });
-    var res = builder.finish().applyTo(doc);
+    var res = new Changeset(ops, _docChars).applyTo(doc).compact();
 //    print('doc: $res\npool: ${res.pool}');
     return res;
   }
