@@ -62,7 +62,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> {
     return this.length == otherAtts.length && this.every(otherAtts.contains);
   }
 
-  OpAttribute find(String key) => firstWhere((a) => a.key == key, orElse: null);
+  OpAttribute find(String key) => firstWhere((a) => a.key == key, orElse: () => null);
 
   bool hasKey(String key) => find(key) != null;
 

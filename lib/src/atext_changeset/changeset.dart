@@ -26,6 +26,9 @@ class Changeset extends ComponentList {
     : _newLen = _oldLen,
       super.from([]);
 
+  int get oldLength => _oldLen;
+  int get newLength => _newLen;
+
   /**
    * Unpacks operation from storage object format and returns Changeset object.
    */
