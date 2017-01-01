@@ -192,6 +192,8 @@ void changeset_test() {
       transform('split formatting by insert', 'X:4>0*0=4', 'X:4>2=2*1+2\$ab', 'left', 'X:6>0*0=2=2*0=2');
 
       transform('remove what was reformatted', 'X:2<2*0*1-2\$ab', 'X:2>0^0*2*3=2', 'left', 'X:2<2*3*1*2-2\$ab');
+
+      transform('throw on removal not match', 'X:3<3-3\$abc', 'X:3<2=1-2\$Xc', 'left', null, 'not match');
     });
   });
 }

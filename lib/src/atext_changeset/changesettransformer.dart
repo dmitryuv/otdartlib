@@ -37,7 +37,10 @@ class ChangesetTransformer extends _MutatorBase implements OperationComposer<Cha
       // keep original inserts, they can't be affected
       _add(op);
     } else {
-      slicer.next(op.chars, op.lines);
+      var removal = slicer.next(op.chars, op.lines);
+      if(op.isRemove && !removal.equalsButOpcode(op)) {
+        throw new Exception('removed in transformation does not match original "${op.charBank.hashCode}" != "${removal.charBank.hashCode}"');
+      }
     }
   }
 
