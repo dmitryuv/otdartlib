@@ -69,7 +69,7 @@ class ComponentList extends DirtyList<OpComponent>{
         return;
       }
 
-      if(op.isKeep  && lastOpcode != OpComponent.KEEP) {
+      if(op.isKeep && lastOpcode != OpComponent.KEEP) {
         res..addAll(removes)
           ..addAll(inserts);
         removes.clear();
@@ -122,8 +122,8 @@ class ComponentList extends DirtyList<OpComponent>{
 
     flush([finalize = false]) {
       if(last.isNotEmpty) {
-        if(finalize && last.isKeep && last.attribs.isEmpty) {
-          // final keep, drop
+        if(finalize && last.isSkip) {
+          // final skip, drop
         } else {
           push(last.pack(pool));
           last = new OpComponent.empty();

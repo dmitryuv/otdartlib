@@ -22,4 +22,6 @@ class OpAttribute {
   bool get isRemove => opcode == REMOVE;
   
   bool operator==(other) => other is OpAttribute && opcode == other.opcode && key == other.key && value == other.value;
+
+  String toString() => '$opcode#$key#$value';
 }

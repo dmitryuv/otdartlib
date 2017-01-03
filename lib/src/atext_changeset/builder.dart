@@ -20,7 +20,7 @@ class Builder {
     _len = _doc.getLength();
 
     if(author != null) {
-      _authorAtts = new AttributeList.fromMap(format: {'author': _author});
+      _authorAtts = new AttributeList.fromMap(format: {Changeset.AUTHOR_ATTRIB: _author});
     } else {
       _authorAtts = new AttributeList();
     }

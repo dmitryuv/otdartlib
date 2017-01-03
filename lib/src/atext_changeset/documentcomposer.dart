@@ -32,7 +32,7 @@ class DocumentComposer extends _ChangesetComposerBase implements OperationCompos
   @override
   _add(OpComponent op) {
     if(!op.isInsert) {
-      throw new Exception('only inserts can be added to the document');
+      throw new Exception('only inserts can be added to the document ${op.opcode}');
     }
 
     if(op.lines > 0) {

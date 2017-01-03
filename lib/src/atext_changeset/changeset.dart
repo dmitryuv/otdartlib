@@ -10,6 +10,8 @@ part of otdartlib.atext_changeset;
  *                              will be calculated from the changeset data.
  */
 class Changeset extends ComponentList {
+  static const String AUTHOR_ATTRIB = 'author';
+
   int _oldLen;
   int _newLen;
   String _author;
@@ -28,6 +30,9 @@ class Changeset extends ComponentList {
 
   int get oldLength => _oldLen;
   int get newLength => _newLen;
+  String get author => _author;
+
+  bool get isIdentity => isEmpty || every((opc) => opc.isSkip);
 
   /**
    * Unpacks operation from storage object format and returns Changeset object.

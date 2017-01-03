@@ -152,6 +152,10 @@ class OpComponent {
       dLen: deltaLen
     );
   }
+
+  String toString() {
+    return '|$lines$opcode$chars\$$charBank$attribs';
+  }
 }
 
 class OpComponentSlicer {

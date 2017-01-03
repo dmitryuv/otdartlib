@@ -82,8 +82,10 @@ class AttributeList extends UnmodifiableListView<OpAttribute> {
       var found = false;
       for(var j = 0; !found && j < thisLen; j++) {
         var op = list[j];
-        if(op.opcode == newOp.opcode && op.key == newOp.key && op.value != newOp.value) {
-          list[j] = newOp;
+        if(op.opcode == newOp.opcode && op.key == newOp.key) {
+          if(op.value != newOp.value) {
+            list[j] = newOp;
+          }
           found = true;
         } else if(op.opcode != newOp.opcode && op.key == newOp.key && op.value == newOp.value) {
           throw new Exception('cannot merge mutual ops, use compose or format instead');
@@ -283,7 +285,7 @@ class AttributeList extends UnmodifiableListView<OpAttribute> {
     return s.toString();
   }
   
-  static int _addToPool(List pool, op) {
+  static int _addToPool(List pool, OpAttribute op) {
     for(var i = 0, l = pool.length; i < l; i++) {
       var pair = pool[i];
       if(pair[0] == op.key && pair[1] == op.value) {

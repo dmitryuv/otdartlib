@@ -62,6 +62,7 @@ void attributeList_test() {
         testMerge('do not replace if different opcode', '*1*0', '^2', '^2*1*0');
         testMerge('add new attrib', '*1*0', '*3', '*3*1*0');
         testMerge('throws for mutual ops', '*0*1', '^0', null, 'mutual ops');
+        testMerge('ignores duplicate', '*0', '*0', '*0');
       });
   
       group('compose', () {
