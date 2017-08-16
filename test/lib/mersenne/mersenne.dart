@@ -68,7 +68,7 @@ class _MersenneTwister19937
   static const LOWER_MASK = 0x7fffffff; /* least significant r bits */
   //c//static unsigned long mt[N]; /* the array for the state vector  */
   //c//static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
-  var mt = new List(N);   /* the array for the state vector  */
+  var mt = new List<int>(N);   /* the array for the state vector  */
   var mti = N+1;           /* mti==N+1 means mt[N] is not initialized */
 
   int _unsigned32 (int n1) // returns a 32-bits unsiged integer from an operand to which applied a bit operator.

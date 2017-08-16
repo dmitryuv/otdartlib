@@ -47,7 +47,7 @@ class Fuzzer {
     var opSets = [makeDoc(), makeDoc(), makeDoc()];
     
     var client = opSets[0];
-    var client2 = opSets[1];
+//    var client2 = opSets[1];
     var server = opSets[2];
     
     for(var i = 0; i < 10; i++) {

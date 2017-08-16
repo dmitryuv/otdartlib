@@ -1,7 +1,7 @@
 library otdartlib.atext_changeset;
 
 import 'package:quiver/core.dart';
-import 'package:collection/wrappers.dart';
+import 'package:collection/collection.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:collection';

@@ -108,15 +108,15 @@ class ComponentList extends DirtyList<OpComponent>{
   AString toAString([List pool]) {
     pool ??= [];
 
-    String resAtts = '';
-    String resText = '';
+    StringBuffer resAtts = new StringBuffer();
+    StringBuffer resText = new StringBuffer();
     int dLen = 0;
     var last = new OpComponent.empty();
     var inner = new OpComponent.empty();
 
     push(AString packed) {
-      resAtts += packed.atts;
-      resText += packed.text;
+      resAtts.write(packed.atts);
+      resText.write(packed.text);
       dLen += packed.dLen;
     }
 
@@ -157,7 +157,7 @@ class ComponentList extends DirtyList<OpComponent>{
     forEach(append);
     flush(true);
 
-    return new AString(atts: resAtts, text: resText, dLen: dLen, pool: pool);
+    return new AString(atts: resAtts.toString(), text: resText.toString(), dLen: dLen, pool: pool);
   }
   
   Map pack([List pool]) => toAString(pool).pack();
